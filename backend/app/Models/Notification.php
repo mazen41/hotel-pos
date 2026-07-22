@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
- * Notification — User notifications for important hotel events.
+ * Notification — User notifications for important POS and back-office events.
  *
  * @property int         $id
  * @property int         $user_id
@@ -47,12 +47,11 @@ class Notification extends Model
         'read_at' => 'datetime',
     ];
 
-    // Notification types
-    public const TYPE_ARRIVAL_TODAY = 'arrival_today';
-    public const TYPE_DEPARTURE_TODAY = 'departure_today';
-    public const TYPE_PAYMENT_OVERDUE = 'payment_overdue';
-    public const TYPE_HOUSEKEEPING_OVERDUE = 'housekeeping_overdue';
-    public const TYPE_MAINTENANCE_CREATED = 'maintenance_created';
+    // POS notification types
+    public const TYPE_SYSTEM = 'system';
+    public const TYPE_LOW_STOCK = 'low_stock';
+    public const TYPE_SHIFT_CLOSED = 'shift_closed';
+    public const TYPE_RETURN_CREATED = 'return_created';
 
     // ─── Relationships ─────────────────────────────────────────────────────────
 

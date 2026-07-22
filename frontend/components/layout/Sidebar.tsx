@@ -37,130 +37,6 @@ function SettingsIcon() {
   );
 }
 
-function RoomTypesIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-      <path d="M9 22V12h6v10" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  );
-}
-
-function RoomsIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-      <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-      <rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-      <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  );
-}
-
-function GuestsIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-      <circle cx="9" cy="7" r="4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-      <path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-      <path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  );
-}
-
-function ReservationsIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-      <line x1="16" y1="2" x2="16" y2="6" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-      <line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-      <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  );
-}
-
-function RatePlansIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <line x1="12" y1="1" x2="12" y2="23" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-      <line x1="17" y1="5" x2="7" y2="5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-      <line x1="17" y1="12" x2="7" y2="12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-      <line x1="17" y1="19" x2="7" y2="19" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  );
-}
-
-function AvailabilityIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-      <line x1="16" y1="2" x2="16" y2="6" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-      <line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-      <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-      <circle cx="12" cy="15" r="2" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  );
-}
-
-function HousekeepingIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  );
-}
-
-function RoomMapIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-      <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-      <rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-      <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-      <circle cx="6.5" cy="6.5" r="1.5" fill="currentColor"/>
-      <circle cx="17.5" cy="6.5" r="1.5" fill="currentColor"/>
-      <circle cx="17.5" cy="17.5" r="1.5" fill="currentColor"/>
-      <circle cx="6.5" cy="17.5" r="1.5" fill="currentColor"/>
-    </svg>
-  );
-}
-
-function BillingIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-      <line x1="2" y1="10" x2="22" y2="10" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  );
-}
-
-function ReportsIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-      <polyline points="14 2 14 8 20 8" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-      <line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-      <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-      <polyline points="10 9 9 9 8 9" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  );
-}
-
-function CalendarIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-      <line x1="16" y1="2" x2="16" y2="6" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-      <line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-      <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-      <rect x="8" y="14" width="2" height="2" fill="currentColor"/>
-      <rect x="14" y="14" width="2" height="2" fill="currentColor"/>
-      <rect x="8" y="18" width="2" height="2" fill="currentColor"/>
-      <rect x="14" y="18" width="2" height="2" fill="currentColor"/>
-    </svg>
-  );
-}
-
 function UsersIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -207,21 +83,18 @@ function ChevronIcon({ direction }: { direction: 'left' | 'right' }) {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: 'Dashboard',    labelKey: 'dashboard',    href: '/dashboard',                      icon: <LayoutIcon /> },
-  { label: 'Guests',       labelKey: 'guests',       href: '/dashboard/guests',               icon: <GuestsIcon /> },
-  { label: 'Reservations', labelKey: 'reservations', href: '/dashboard/reservations',         icon: <ReservationsIcon /> },
-  { label: 'Calendar',     labelKey: 'calendar',     href: '/dashboard/reservations/calendar',icon: <CalendarIcon /> },
-  { label: 'Billing',      labelKey: 'billing',      href: '/dashboard/billing/folios',       icon: <BillingIcon /> },
-  { label: 'Reports',      labelKey: 'reports',      href: '/dashboard/reports',              icon: <ReportsIcon /> },
-  { label: 'Availability', labelKey: 'availability', href: '/dashboard/availability',         icon: <AvailabilityIcon /> },
-  { label: 'Room Map',     labelKey: 'roomMap',      href: '/dashboard/room-map',             icon: <RoomMapIcon /> },
-  { label: 'Housekeeping', labelKey: 'housekeeping', href: '/dashboard/housekeeping',         icon: <HousekeepingIcon /> },
-  { label: 'Rate Plans',   labelKey: 'ratePlans',    href: '/dashboard/rate-plans',           icon: <RatePlansIcon /> },
-  { label: 'Room Types',   labelKey: 'roomTypes',    href: '/dashboard/room-types',           icon: <RoomTypesIcon /> },
-  { label: 'Rooms',        labelKey: 'rooms',        href: '/dashboard/rooms',                icon: <RoomsIcon /> },
-  { label: 'Users',        labelKey: 'users',        href: '/dashboard/users',                icon: <UsersIcon /> },
-  { label: 'Audit Logs',   labelKey: 'auditLogs',    href: '/dashboard/audit-logs',           icon: <AuditLogsIcon /> },
-  { label: 'Settings',     labelKey: 'settings',     href: '/dashboard/settings',             icon: <SettingsIcon /> },
+  { label: 'POS', labelKey: 'pos', href: '/pos', icon: <LayoutIcon /> },
+  { label: 'Orders', labelKey: 'orders', href: '/pos/orders', icon: <ReportsIcon /> },
+  { label: 'Inventory', labelKey: 'inventory', href: '/pos/inventory', icon: <SettingsIcon /> },
+  { label: 'Cash Shifts', labelKey: 'cashShifts', href: '/pos/shifts', icon: <LayoutIcon /> },
+  { label: 'Returns', labelKey: 'returns', href: '/pos/returns', icon: <ReportsIcon /> },
+  { label: 'Reports', labelKey: 'reports', href: '/pos/reports', icon: <ReportsIcon /> },
+  { label: 'Payment Methods', labelKey: 'paymentMethods', href: '/pos/settings#payment-methods', icon: <SettingsIcon /> },
+  { label: 'Roles/Permissions', labelKey: 'rolesPermissions', href: '/pos/roles', icon: <UsersIcon /> },
+  { label: 'Users', labelKey: 'users', href: '/pos/users', icon: <UsersIcon /> },
+  { label: 'Notifications', labelKey: 'notifications', href: '/pos/notifications', icon: <AuditLogsIcon /> },
+  { label: 'Audit Log', labelKey: 'auditLogs', href: '/pos/audit-logs', icon: <AuditLogsIcon /> },
+  { label: 'Settings', labelKey: 'settings', href: '/pos/settings', icon: <SettingsIcon /> },
 ];
 
 export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
@@ -285,8 +158,8 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
             boxShadow: '0 0 12px rgba(99,102,241,0.35)',
           }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-              <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M9 22V12h6v10" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M4 7h16v10H4z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M7 17h10v3H7z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
           {!collapsed && (
@@ -295,7 +168,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
               fontWeight: '700',
               color: 'var(--color-text-primary)',
               letterSpacing: '-0.4px',
-            }}>{t('hotelOS')}</span>
+            }}>{t('posOS')}</span>
           )}
         </div>
         {!collapsed && (

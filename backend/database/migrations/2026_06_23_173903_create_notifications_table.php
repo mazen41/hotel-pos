@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('title');
             $table->text('message');
             $table->json('data')->nullable(); // Additional data related to the notification
-            $table->string('related_type')->nullable(); // Polymorphic relation to related entity (Reservation, Guest, etc.)
+            $table->string('related_type')->nullable(); // Polymorphic relation to related POS/back-office entity
             $table->unsignedBigInteger('related_id')->nullable();
             $table->boolean('is_read')->default(false);
             $table->timestamp('read_at')->nullable();
