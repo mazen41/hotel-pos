@@ -2,8 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -12,10 +14,17 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            RolesAndPermissionsSeeder::class,
             PosRolesAndPermissionsSeeder::class,
-            DemoDataSeeder::class,
-            AvailabilitySeeder::class,
         ]);
+
+        $user = User::firstOrCreate(
+            ['email' => 'admin@pos.local'],
+            [
+                'name' => 'POS Administrator',
+                'password' => Hash::make('password123'),
+            ],
+        );
+
+        $user->syncRoles(['Admin']);
     }
 }
