@@ -1295,8 +1295,8 @@ export const menuCategoriesApi = {
 export const menuItemsApi = {
   list: (params?: { category_id?: number; active?: boolean; search?: string }) => {
     const queryString = new URLSearchParams();
-    if (params?.category_id) queryString.append('category_id', String(params.category_id));
-    if (params?.active !== undefined) queryString.append('active', String(params.active));
+    if (params?.category_id) queryString.append('menu_category_id', String(params.category_id));
+    if (params?.active !== undefined) queryString.append('active_only', String(params.active));
     if (params?.search) queryString.append('search', params.search);
     const query = queryString.toString();
     return request<{ data: import('@/types').MenuItem[] }>(

@@ -19,7 +19,7 @@ export default function POSPage() {
   }
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex min-h-[calc(100vh-116px)] bg-background rounded-xl overflow-hidden border border-border">
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col">
         <OrderHeader />
