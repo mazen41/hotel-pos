@@ -1,12 +1,12 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import { ApiError, menuCategoriesApi, menuItemsApi, tablesApi, paymentMethodsApi } from '@/lib/api';
-import type { MenuCategory, MenuItem, Table, Order } from '@/types';
+import type { MenuCategory, MenuItem, Table, PosPaymentMethod } from '@/types';
 
 export function usePOS() {
   const [categories, setCategories] = useState<MenuCategory[]>([]);
   const [items, setItems] = useState<MenuItem[]>([]);
   const [tables, setTables] = useState<Table[]>([]);
-  const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
+  const [paymentMethods, setPaymentMethods] = useState<PosPaymentMethod[]>([]);
   
   const [loadingMenu, setLoadingMenu] = useState(true);
   const [loadingTables, setLoadingTables] = useState(true);

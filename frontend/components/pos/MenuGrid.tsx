@@ -3,6 +3,7 @@
 import { useState, memo } from 'react';
 import type { MenuCategory, MenuItem } from '@/types';
 import { Search, UtensilsCrossed } from 'lucide-react';
+import { formatCurrency } from '@/lib/money';
 
 interface MenuGridProps {
   categories: MenuCategory[];
@@ -15,11 +16,6 @@ interface MenuGridProps {
   onSelectCategory: (categoryId: number | null) => void;
   onSearchChange: (query: string) => void;
   onItemClick: (item: MenuItem) => void;
-}
-
-function formatPrice(value: number | string) {
-  const amount = Number(value);
-  return Number.isFinite(amount) ? amount.toFixed(2) : '0.00';
 }
 
 export const MenuGrid = memo(function MenuGrid({
@@ -129,7 +125,7 @@ export const MenuGrid = memo(function MenuGrid({
                         {item.name}
                       </h3>
                       <span className="shrink-0 rounded-md bg-background px-2 py-1 text-xs font-semibold text-text-accent">
-                        ${formatPrice(item.price)}
+                        {formatCurrency(item.price)}
                       </span>
                     </div>
                     {item.description && (

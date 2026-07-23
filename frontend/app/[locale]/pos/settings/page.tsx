@@ -20,8 +20,8 @@ export default function PosSettingsPage() {
     receipt_footer: '',
     tax_percentage: 0,
     service_charge_percentage: 0,
-    currency: 'USD',
-    currency_symbol: '$',
+    currency: 'EGP',
+    currency_symbol: 'EGP',
     auto_approve_return_threshold: 0
   });
 
@@ -271,7 +271,7 @@ export default function PosSettingsPage() {
                       currency: e.target.value
                     })}
                     className="w-full px-4 py-3 rounded-lg bg-surface-elevated border border-border text-text-primary focus:outline-none focus:border-text-accent"
-                    placeholder="USD"
+                    placeholder="EGP"
                   />
                 </div>
 
@@ -287,7 +287,7 @@ export default function PosSettingsPage() {
                       currency_symbol: e.target.value
                     })}
                     className="w-full px-4 py-3 rounded-lg bg-surface-elevated border border-border text-text-primary focus:outline-none focus:border-text-accent"
-                    placeholder="$"
+                    placeholder="EGP"
                   />
                 </div>
               </div>

@@ -1,9 +1,9 @@
 'use client';
 
 import { useRef } from 'react';
-import { useTranslations } from 'next-intl';
-import { Printer, X, Download } from 'lucide-react';
-import type { Order, OrderItem } from '@/types';
+import { Printer, X } from 'lucide-react';
+import type { Order } from '@/types';
+import { formatCurrency, toMoneyNumber } from '@/lib/money';
 
 interface ReceiptProps {
   order: Order | null;
@@ -12,27 +12,21 @@ interface ReceiptProps {
   onPrint?: () => void;
 }
 
-function formatMoney(value: number | string) {
-  const amount = Number(value);
-  return Number.isFinite(amount) ? amount.toFixed(2) : '0.00';
-}
-
 function getOrderItems(order: Order | null) {
   return order?.order_items ?? order?.orderItems ?? [];
 }
 
 export function Receipt({ order, tableNumber, onClose, onPrint }: ReceiptProps) {
-  const t = useTranslations();
   const receiptRef = useRef<HTMLDivElement>(null);
 
   const items = getOrderItems(order);
-  const subtotal = Number(order?.subtotal ?? 0);
-  const tax = Number(order?.tax_amount ?? 0);
-  const serviceCharge = Number(order?.service_charge ?? 0);
-  const discount = Number(order?.discount_amount ?? 0);
-  const total = Number(order?.total ?? 0);
-  const paid = Number(order?.paid_amount ?? 0);
-  const change = Number(order?.change_amount ?? 0);
+  const subtotal = toMoneyNumber(order?.subtotal);
+  const tax = toMoneyNumber(order?.tax_amount);
+  const serviceCharge = toMoneyNumber(order?.service_charge);
+  const discount = toMoneyNumber(order?.discount_amount);
+  const total = toMoneyNumber(order?.total);
+  const paid = toMoneyNumber(order?.paid_amount);
+  const change = toMoneyNumber(order?.change_amount);
 
   const handlePrint = () => {
     if (onPrint) {
@@ -73,7 +67,7 @@ export function Receipt({ order, tableNumber, onClose, onPrint }: ReceiptProps) 
           <div className="space-y-4 text-sm">
             {/* Restaurant Info */}
             <div className="text-center">
-              <h3 className="text-lg font-bold text-text-primary">Café Restaurant</h3>
+              <h3 className="text-lg font-bold text-text-primary">Hotel POS</h3>
               <p className="text-text-muted">123 Main Street</p>
               <p className="text-text-muted">Tel: (555) 123-4567</p>
             </div>
@@ -102,7 +96,11 @@ export function Receipt({ order, tableNumber, onClose, onPrint }: ReceiptProps) 
               </div>
               <div className="flex justify-between">
                 <span className="text-text-muted">Cashier:</span>
-                <span className="font-medium text-text-primary">{order.user?.name || 'N/A'}</span>
+                <span className="font-medium text-text-primary">{order.user?.name || order.shiftTaker || 'N/A'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-text-muted">Shift:</span>
+                <span className="font-medium text-text-primary">{order.cashShift?.shift_name || order.cashShift?.name || order.shiftName || 'N/A'}</span>
               </div>
             </div>
 
@@ -119,7 +117,7 @@ export function Receipt({ order, tableNumber, onClose, onPrint }: ReceiptProps) 
                       <span className="text-text-muted"> x{item.quantity}</span>
                     </div>
                     <span className="font-medium text-text-primary">
-                      ${formatMoney(item.total_price)}
+                      {formatCurrency(item.total_price)}
                     </span>
                   </div>
                 ))}
@@ -130,36 +128,36 @@ export function Receipt({ order, tableNumber, onClose, onPrint }: ReceiptProps) 
             <div className="border-t border-border pt-4 space-y-1">
               <div className="flex justify-between">
                 <span className="text-text-muted">Subtotal:</span>
-                <span className="font-medium text-text-primary">${formatMoney(subtotal)}</span>
+                <span className="font-medium text-text-primary">{formatCurrency(subtotal)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-text-muted">Tax:</span>
-                <span className="font-medium text-text-primary">${formatMoney(tax)}</span>
+                <span className="font-medium text-text-primary">{formatCurrency(tax)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-text-muted">Service Charge:</span>
-                <span className="font-medium text-text-primary">${formatMoney(serviceCharge)}</span>
+                <span className="font-medium text-text-primary">{formatCurrency(serviceCharge)}</span>
               </div>
               {discount > 0 && (
                 <div className="flex justify-between">
                   <span className="text-text-muted">Discount:</span>
-                  <span className="font-medium text-success">-${formatMoney(discount)}</span>
+                  <span className="font-medium text-success">-{formatCurrency(discount)}</span>
                 </div>
               )}
               <div className="flex justify-between border-t border-border pt-2">
                 <span className="font-bold text-text-primary">Total:</span>
-                <span className="font-bold text-text-accent">${formatMoney(total)}</span>
+                <span className="font-bold text-text-accent">{formatCurrency(total)}</span>
               </div>
               {paid > 0 && (
                 <>
                   <div className="flex justify-between">
                     <span className="text-text-muted">Paid:</span>
-                    <span className="font-medium text-text-primary">${formatMoney(paid)}</span>
+                    <span className="font-medium text-text-primary">{formatCurrency(paid)}</span>
                   </div>
                   {change > 0 && (
                     <div className="flex justify-between">
                       <span className="text-text-muted">Change:</span>
-                      <span className="font-medium text-success">${formatMoney(change)}</span>
+                      <span className="font-medium text-success">{formatCurrency(change)}</span>
                     </div>
                   )}
                 </>
@@ -177,7 +175,7 @@ export function Receipt({ order, tableNumber, onClose, onPrint }: ReceiptProps) 
                         {payment.paymentMethod?.name || 'Payment'}
                       </span>
                       <span className="font-medium text-text-primary">
-                        ${formatMoney(payment.amount)}
+                        {formatCurrency(payment.amount)}
                       </span>
                     </div>
                   ))}

@@ -1,17 +1,19 @@
 'use client';
 
-import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
+import type { FormEvent } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { usePermissions } from '@/contexts/AuthContext';
-import { ApiError, ordersApi, tablesApi } from '@/lib/api';
+import { ApiError, cashShiftsApi, ordersApi, tablesApi } from '@/lib/api';
 import { usePOS } from '@/hooks/usePOS';
 import { useTableOrders } from '@/hooks/useTableOrders';
 import { TableGrid } from '@/components/pos/TableGrid';
 import { MenuGrid } from '@/components/pos/MenuGrid';
 import { CartPanel } from '@/components/pos/CartPanel';
 import { Receipt } from '@/components/pos/Receipt';
-import { ArrowLeft, X, Receipt as ReceiptIcon } from 'lucide-react';
-import type { MenuItem, OrderItem, Order } from '@/types';
+import { ArrowLeft, DollarSign, X, Receipt as ReceiptIcon } from 'lucide-react';
+import type { CashShift, MenuItem, OrderItem, Order } from '@/types';
+import { toMoneyNumber } from '@/lib/money';
 
 // Laravel serializes camelCase relations as snake_case in JSON (order_items, not orderItems)
 function getOrderItems(order: Order | null) {
@@ -25,6 +27,12 @@ export default function POSPage() {
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showReceipt, setShowReceipt] = useState(false);
+  const [receiptOrder, setReceiptOrder] = useState<Order | null>(null);
+  const [receiptTableNumber, setReceiptTableNumber] = useState<string | undefined>();
+  const [currentShift, setCurrentShift] = useState<CashShift | null>(null);
+  const [showOpenShiftDialog, setShowOpenShiftDialog] = useState(false);
+  const [openingShift, setOpeningShift] = useState(false);
+  const [shiftForm, setShiftForm] = useState({ shift_name: 'Morning Shift', shift_taker: '', opening_cash: '500' });
   const hasLoadedData = useRef(false);
 
   // Custom hooks for better organization
@@ -45,7 +53,7 @@ export default function POSPage() {
   }, [pos.items, searchQuery, selectedCategory]);
 
   const itemCount = useMemo(
-    () => getOrderItems(tableOrders.activeOrder).reduce((sum: number, item: any) => sum + item.quantity, 0),
+    () => getOrderItems(tableOrders.activeOrder).reduce((sum, item) => sum + item.quantity, 0),
     [tableOrders.activeOrder],
   );
 
@@ -54,9 +62,38 @@ export default function POSPage() {
 
     hasLoadedData.current = true;
     loadInitialData();
+    cashShiftsApi.getCurrent()
+      .then(({ data }) => setCurrentShift(data))
+      .catch(() => setCurrentShift(null));
   }, [can, loadInitialData]);
 
-  const handleTableSelect = async (table: any) => {
+  const handleOpenShift = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const shiftTaker = shiftForm.shift_taker.trim();
+    if (!shiftTaker) {
+      tableOrders.setError?.('Shift taker name is required.');
+      return;
+    }
+
+    setOpeningShift(true);
+    try {
+      const { data } = await cashShiftsApi.open({
+        opening_cash: toMoneyNumber(shiftForm.opening_cash),
+        name: shiftForm.shift_name.trim(),
+        shift_name: shiftForm.shift_name.trim(),
+        shift_taker: shiftTaker,
+      });
+      setCurrentShift(data);
+      setShowOpenShiftDialog(false);
+      tableOrders.showNotice('Shift opened successfully');
+    } catch (error) {
+      tableOrders.setError?.(error instanceof ApiError ? error.message : 'Could not open shift.');
+    } finally {
+      setOpeningShift(false);
+    }
+  };
+
+  const handleTableSelect = async (table: import('@/types').Table) => {
     try {
       const { order } = await tableOrders.selectTable(table);
       
@@ -134,7 +171,7 @@ export default function POSPage() {
         const response = await ordersApi.update(tableOrders.activeOrder.id, {
           status: 'pending_payment',
         });
-        const updatedOrder = response.data;
+        const updatedOrder = { ...response.data, shiftId: currentShift?.id, shiftName: currentShift?.shift_name ?? currentShift?.name, shiftTaker: currentShift?.shift_taker };
         tableOrders.setActiveOrder(updatedOrder);
         
         // Update table status
@@ -149,12 +186,12 @@ export default function POSPage() {
         tableOrders.showNotice('Order saved as pending payment');
       } else {
         // Complete the order with payment
-        const paymentMethodObj = pos.paymentMethods.find((pm: any) => pm.code === paymentMethod);
+        const paymentMethodObj = pos.paymentMethods.find((pm) => pm.code === paymentMethod);
         if (!paymentMethodObj) {
           throw new Error('Payment method not found');
         }
         
-        const total = Number(tableOrders.activeOrder.total);
+        const total = toMoneyNumber(tableOrders.activeOrder.total);
         
         await ordersApi.addPayment(tableOrders.activeOrder.id, {
           payment_method_id: paymentMethodObj.id,
@@ -162,7 +199,7 @@ export default function POSPage() {
         });
         
         const response = await ordersApi.complete(tableOrders.activeOrder.id);
-        const updatedOrder = response.data;
+        const updatedOrder = { ...response.data, shiftId: currentShift?.id, shiftName: currentShift?.shift_name ?? currentShift?.name, shiftTaker: currentShift?.shift_taker };
         tableOrders.setActiveOrder(updatedOrder);
         
         // Update table status back to available
@@ -173,8 +210,12 @@ export default function POSPage() {
           )
         );
         
-        tableOrders.backToTables();
+        setReceiptOrder(updatedOrder);
+        setReceiptTableNumber(tableOrders.selectedTable.number);
         tableOrders.showNotice(`Payment completed via ${paymentMethod === 'cash' ? 'Cash' : 'Visa/Card'}`);
+        setShowReceipt(true);
+        window.setTimeout(() => window.print(), 150);
+        tableOrders.backToTables();
       }
     } catch (error) {
       tableOrders.setError?.(error instanceof ApiError ? error.message : 'Could not complete payment.');
@@ -185,6 +226,34 @@ export default function POSPage() {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <p className="text-text-muted">{t('errors.noPermission')}</p>
+      </div>
+    );
+  }
+
+
+  if (!currentShift) {
+    return (
+      <div className="flex min-h-[calc(100vh-116px)] items-center justify-center p-4">
+        <div className="w-full max-w-md rounded-2xl border border-border bg-surface p-6 text-center shadow-soft">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <DollarSign className="h-8 w-8" />
+          </div>
+          <h1 className="text-2xl font-bold text-text-primary">Open Shift</h1>
+          <p className="mt-2 text-text-muted">Open a cashier shift before creating POS orders.</p>
+          {tableOrders.error && <p className="mt-4 rounded-lg bg-error/10 p-3 text-sm text-error">{tableOrders.error}</p>}
+          <button onClick={() => setShowOpenShiftDialog(true)} className="mt-6 w-full rounded-xl bg-primary py-3 font-semibold text-white shadow-medium transition hover:bg-primary/90">Open Shift</button>
+        </div>
+        {showOpenShiftDialog && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <form onSubmit={handleOpenShift} className="w-full max-w-md space-y-4 rounded-2xl bg-surface p-6 shadow-2xl">
+              <h2 className="text-xl font-bold text-text-primary">Open Shift</h2>
+              <label className="block text-sm font-medium text-text-secondary">Shift Name<input value={shiftForm.shift_name} onChange={(event) => setShiftForm({ ...shiftForm, shift_name: event.target.value })} className="mt-2 w-full rounded-lg border border-border bg-surface-elevated px-4 py-3 text-text-primary outline-none focus:border-text-accent" /></label>
+              <label className="block text-sm font-medium text-text-secondary">Shift Taker Name<input required value={shiftForm.shift_taker} onChange={(event) => setShiftForm({ ...shiftForm, shift_taker: event.target.value })} className="mt-2 w-full rounded-lg border border-border bg-surface-elevated px-4 py-3 text-text-primary outline-none focus:border-text-accent" placeholder="Ahmed Mohamed" /></label>
+              <label className="block text-sm font-medium text-text-secondary">Opening Cash<input required type="number" min="0" step="0.01" value={shiftForm.opening_cash} onChange={(event) => setShiftForm({ ...shiftForm, opening_cash: event.target.value })} className="mt-2 w-full rounded-lg border border-border bg-surface-elevated px-4 py-3 text-text-primary outline-none focus:border-text-accent" /></label>
+              <div className="flex gap-3"><button type="button" onClick={() => setShowOpenShiftDialog(false)} className="flex-1 rounded-xl border border-border py-3 font-semibold text-text-secondary">Cancel</button><button disabled={openingShift} className="flex-1 rounded-xl bg-primary py-3 font-semibold text-white disabled:opacity-60">{openingShift ? 'Opening...' : 'Open Shift'}</button></div>
+            </form>
+          </div>
+        )}
       </div>
     );
   }
@@ -284,11 +353,11 @@ export default function POSPage() {
       </div>
 
       {/* Receipt Modal */}
-      {showReceipt && tableOrders.activeOrder && tableOrders.selectedTable && (
+      {showReceipt && (receiptOrder || tableOrders.activeOrder) && (
         <Receipt
-          order={tableOrders.activeOrder}
-          tableNumber={tableOrders.selectedTable.number}
-          onClose={() => setShowReceipt(false)}
+          order={receiptOrder || tableOrders.activeOrder}
+          tableNumber={receiptTableNumber || tableOrders.selectedTable?.number}
+          onClose={() => { setShowReceipt(false); setReceiptOrder(null); }}
           onPrint={() => {
             window.print();
             setShowReceipt(false);

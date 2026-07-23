@@ -421,6 +421,7 @@ export const ordersApi = {
     guest_folio_id?: string;
     notes?: string;
     discount_amount?: number;
+    tax_amount?: number;
     cancellation_reason?: string;
     refund_reason?: string;
   }) =>
@@ -502,7 +503,7 @@ export const cashShiftsApi = {
   getCurrent: () =>
     request<{ data: import('@/types').CashShift | null }>('/cash-shifts/current'),
 
-  open: (data: { opening_cash: number }) =>
+  open: (data: { opening_cash: number; name?: string; shift_name?: string; shift_taker?: string }) =>
     request<{ message: string; data: import('@/types').CashShift }>(
       '/cash-shifts/open',
       { method: 'POST', body: JSON.stringify(data) }
@@ -722,6 +723,7 @@ export const tablesApi = {
     number: string;
     name?: string;
     capacity?: number;
+    status?: string;
     location?: string;
     notes?: string;
   }) =>

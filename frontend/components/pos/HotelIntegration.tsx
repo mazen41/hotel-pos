@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { hotelIntegrationApi } from '@/lib/api';
 import type { HotelGuest } from '@/types';
+import { formatCurrency } from '@/lib/money';
 import { Search, User, MapPin, CreditCard, Check, X, AlertCircle } from 'lucide-react';
 
 interface HotelIntegrationProps {
@@ -154,7 +155,7 @@ export function HotelIntegration({ onGuestSelect, chargeToFolio, orderTotal }: H
               disabled={charging}
               className="px-4 py-2 rounded-lg bg-success text-white font-medium hover:bg-success-600 disabled:opacity-50 transition-colors"
             >
-              {charging ? 'Processing...' : `Charge $${orderTotal.toFixed(2)}`}
+              {charging ? 'Processing...' : `Charge ${formatCurrency(orderTotal)}`}
             </button>
           </div>
         </div>
