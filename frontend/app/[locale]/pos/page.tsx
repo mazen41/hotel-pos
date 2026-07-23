@@ -29,6 +29,7 @@ export default function POSPage() {
 
   // Custom hooks for better organization
   const pos = usePOS();
+  const { loadInitialData } = pos;
   const tableOrders = useTableOrders();
 
   // Memoized filtered items for performance
@@ -49,7 +50,9 @@ export default function POSPage() {
   );
 
   useEffect(() => {
-    if (!can('pos.view')) return;
+    if (!can('pos.view') || hasLoadedData.current) return;
+
+    hasLoadedData.current = true;
     loadInitialData();
   }, [can, loadInitialData]);
 
