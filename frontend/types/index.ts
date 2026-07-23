@@ -105,8 +105,8 @@ export interface MenuItem {
   menu_category_id: number;
   name: string;
   description: string | null;
-  price: number;
-  cost: number | null;
+  price: number | string;
+  cost: number | string | null;
   image_url: string | null;
   is_active: boolean;
   sort_order: number;
@@ -127,6 +127,21 @@ export interface MenuItemInventory {
   inventory?: Inventory;
 }
 
+// ─── POS Tables ─────────────────────────────────────────────────────────────────
+
+export interface Table {
+  id: number;
+  number: string;
+  name: string | null;
+  capacity: number;
+  status: 'available' | 'occupied' | 'pending_payment' | 'reserved' | 'needs_cleaning';
+  location: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  activeOrder?: Order;
+}
+
 // ─── POS Orders ─────────────────────────────────────────────────────────────────
 
 export interface Order {
@@ -139,14 +154,14 @@ export interface Order {
   guest_name: string | null;
   guest_room: string | null;
   guest_folio_id: string | null;
-  status: 'pending' | 'processing' | 'completed' | 'cancelled' | 'refunded';
-  subtotal: number;
-  tax_amount: number;
-  service_charge: number;
-  discount_amount: number;
-  total: number;
-  paid_amount: number;
-  change_amount: number;
+  status: 'pending' | 'processing' | 'completed' | 'cancelled' | 'refunded' | 'pending_payment';
+  subtotal: number | string;
+  tax_amount: number | string;
+  service_charge: number | string;
+  discount_amount: number | string;
+  total: number | string;
+  paid_amount: number | string;
+  change_amount: number | string;
   notes: string | null;
   completed_at: string | null;
   cancelled_at: string | null;
@@ -158,6 +173,8 @@ export interface Order {
   updated_at: string;
   user?: User;
   cashShift?: CashShift;
+  // Laravel serializes camelCase relation names as snake_case in JSON responses
+  order_items?: OrderItem[];
   orderItems?: OrderItem[];
   payments?: OrderPayment[];
 }
@@ -167,11 +184,11 @@ export interface OrderItem {
   order_id: number;
   menu_item_id: number;
   quantity: number;
-  unit_price: number;
-  total_price: number;
+  unit_price: number | string;
+  total_price: number | string;
   selected_modifiers: Record<string, unknown>[] | null;
   notes: string | null;
-  discount_amount: number;
+  discount_amount: number | string;
   created_at: string;
   updated_at: string;
   menuItem?: MenuItem;

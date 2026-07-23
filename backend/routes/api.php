@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\Pos\InventoryController;
 use App\Http\Controllers\Api\Pos\MenuCategoryController;
 use App\Http\Controllers\Api\Pos\MenuItemController;
 use App\Http\Controllers\Api\Pos\OrderController;
+use App\Http\Controllers\Api\Pos\TableController;
 use App\Http\Controllers\Api\Pos\PaymentMethodController;
 use App\Http\Controllers\Api\Pos\PosSettingController;
 use App\Http\Controllers\Api\Pos\ReportController as PosReportController;
@@ -74,6 +75,17 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{menuItem}', [MenuItemController::class, 'show']);
         Route::put('/{menuItem}', [MenuItemController::class, 'update']);
         Route::delete('/{menuItem}', [MenuItemController::class, 'destroy']);
+    });
+
+    Route::prefix('tables')->group(function () {
+        Route::get('/', [TableController::class, 'index']);
+        Route::post('/', [TableController::class, 'store']);
+        Route::get('/{table}', [TableController::class, 'show']);
+        Route::put('/{table}', [TableController::class, 'update']);
+        Route::delete('/{table}', [TableController::class, 'destroy']);
+        Route::put('/{table}/status', [TableController::class, 'updateStatus']);
+        Route::post('/{table}/order', [TableController::class, 'getOrCreateOrder']);
+        Route::post('/{table}/complete', [TableController::class, 'completeOrder']);
     });
 
     Route::prefix('orders')->group(function () {

@@ -1,87 +1,91 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState, memo } from 'react';
 import { useTranslations } from 'next-intl';
-import { Minus, Plus, Trash2, ShoppingBag, Hotel } from 'lucide-react';
-import type { MenuItem } from '@/types';
+import { Minus, Trash2, ShoppingBag, Hotel, ChevronUp, ReceiptText, DollarSign, CreditCard, Clock } from 'lucide-react';
+import type { HotelGuest, Order, OrderItem } from '@/types';
 import { HotelIntegration } from './HotelIntegration';
-import type { HotelGuest } from '@/types';
 
-interface CartItem extends MenuItem {
-  quantity: number;
-  notes: string;
+interface CartPanelProps {
+  order: Order | null;
+  loading: boolean;
+  savingItemId: number | null;
+  onQuantityChange: (item: OrderItem, quantity: number) => void;
+  onRemoveItem: (item: OrderItem) => void;
+  onClearOrder: () => void;
+  onCheckout: (method: 'cash' | 'card' | 'guest') => void;
 }
 
-export function CartPanel() {
+function toMoney(value: number | string | null | undefined) {
+  const amount = Number(value ?? 0);
+  return Number.isFinite(amount) ? amount : 0;
+}
+
+function formatMoney(value: number | string | null | undefined) {
+  return toMoney(value).toFixed(2);
+}
+
+export const CartPanel = memo(function CartPanel({
+  order,
+  loading,
+  savingItemId,
+  onQuantityChange,
+  onRemoveItem,
+  onClearOrder,
+  onCheckout,
+}: CartPanelProps) {
   const t = useTranslations();
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [tax, setTax] = useState(0);
-  const [serviceCharge, setServiceCharge] = useState(0);
-  const [discount, setDiscount] = useState(0);
   const [selectedGuest, setSelectedGuest] = useState<HotelGuest | null>(null);
   const [showHotelIntegration, setShowHotelIntegration] = useState(false);
+  const [showPaymentOptions, setShowPaymentOptions] = useState(false);
 
-  const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const total = subtotal + tax + serviceCharge - discount;
-
-  const updateQuantity = (item: CartItem, delta: number) => {
-    if (item.quantity + delta <= 0) {
-      removeItem(item);
-      return;
-    }
-    setCartItems(
-      cartItems.map((i) =>
-        i.id === item.id ? { ...i, quantity: i.quantity + delta } : i
-      )
-    );
-  };
-
-  const removeItem = (item: CartItem) => {
-    setCartItems(cartItems.filter((i) => i.id !== item.id));
-  };
-
-  const updateNotes = (item: CartItem, notes: string) => {
-    setCartItems(
-      cartItems.map((i) => (i.id === item.id ? { ...i, notes } : i))
-    );
-  };
+  // Laravel serializes camelCase relations as snake_case in JSON (order_items, not orderItems)
+  const items = order?.order_items ?? order?.orderItems ?? [];
+  const itemCount = useMemo(() => items.reduce((sum, item) => sum + item.quantity, 0), [items]);
+  const total = toMoney(order?.total);
 
   const handleChargeToFolio = async (guest: HotelGuest, amount: number) => {
-    // This would call the API to charge to the hotel folio
     console.log('Charging to folio:', guest.id, amount);
-    // Clear cart after successful charge
-    setCartItems([]);
-    setSelectedGuest(null);
+    setSelectedGuest(guest);
     setShowHotelIntegration(false);
   };
 
+  const handlePaymentSelect = (method: 'cash' | 'card' | 'guest') => {
+    onCheckout(method);
+    setShowPaymentOptions(false);
+  };
+
   return (
-    <div className="w-96 bg-surface border-l border-border flex flex-col">
-      <div className="p-4 border-b border-border">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <ShoppingBag className="w-5 h-5 text-text-accent" />
-            <h2 className="font-display text-lg font-bold text-text-primary">
-              {t('pos.cart')}
-            </h2>
+    <aside className="flex h-full min-h-0 w-full flex-col border-t border-border bg-surface lg:w-[420px] lg:border-l lg:border-t-0">
+      <div className="border-b border-border p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <ShoppingBag className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-text-primary">{t('pos.cart')}</h2>
+              <p className="text-xs text-text-muted">
+                {order ? `${order.order_number} • ${itemCount} item${itemCount === 1 ? '' : 's'}` : 'No active order'}
+              </p>
+            </div>
           </div>
           <button
             onClick={() => setShowHotelIntegration(!showHotelIntegration)}
-            className={`p-2 rounded-lg transition-colors ${
+            className={`rounded-lg p-2 transition ${
               showHotelIntegration
                 ? 'bg-primary text-white'
-                : 'bg-surface-hover text-text-muted hover:text-text-primary'
+                : 'bg-background text-text-muted hover:text-text-primary'
             }`}
-            title="Hotel Integration"
+            title="Hotel integration"
           >
-            <Hotel className="w-5 h-5" />
+            <Hotel className="h-5 w-5" />
           </button>
         </div>
       </div>
 
-      {/* Hotel Integration */}
       {showHotelIntegration && (
-        <div className="p-4 border-b border-border">
+        <div className="border-b border-border p-4">
           <HotelIntegration
             onGuestSelect={setSelectedGuest}
             chargeToFolio={handleChargeToFolio}
@@ -90,128 +94,174 @@ export function CartPanel() {
         </div>
       )}
 
-      {/* Cart Items */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {cartItems.length === 0 ? (
-          <div className="text-center py-8">
-            <ShoppingBag className="w-12 h-12 text-text-muted mx-auto mb-2" />
-            <p className="text-text-muted">{t('pos.emptyCart')}</p>
+      <div className="min-h-0 flex-1 overflow-y-auto p-4">
+        {loading ? (
+          <div className="space-y-3">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div key={index} className="h-24 animate-pulse rounded-lg bg-background" />
+            ))}
+          </div>
+        ) : items.length === 0 ? (
+          <div className="flex h-full min-h-64 flex-col items-center justify-center rounded-lg border border-dashed border-border bg-background/60 p-6 text-center">
+            <ReceiptText className="mb-3 h-11 w-11 text-text-muted" />
+            <p className="font-medium text-text-primary">{t('pos.emptyCart')}</p>
+            <p className="mt-1 text-sm text-text-muted">Click any product card to start a new order.</p>
           </div>
         ) : (
-          cartItems.map((item) => (
-            <div
-              key={item.id}
-              className="bg-surface-elevated rounded-lg p-3 space-y-2"
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <h4 className="font-medium text-text-primary text-sm">{item.name}</h4>
-                  <p className="text-text-accent font-display font-bold">
-                    ${(item.price).toFixed(2)}
-                  </p>
+          <div className="space-y-3">
+            {items.map((item) => {
+              const isSaving = savingItemId === item.id;
+
+              return (
+                <div key={item.id} className="rounded-lg border border-border bg-background p-3 shadow-sm transition-all duration-200 hover:shadow-md">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <h4 className="truncate text-sm font-semibold text-text-primary">
+                        {item.menuItem?.name ?? `Item #${item.menu_item_id}`}
+                      </h4>
+                      <p className="mt-1 text-xs text-text-muted">
+                        ${formatMoney(item.unit_price)} each
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => onRemoveItem(item)}
+                      disabled={isSaving}
+                      className="rounded-md p-2 text-text-muted transition hover:bg-error/10 hover:text-error disabled:opacity-50"
+                      title="Remove item"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  <div className="mt-3 flex items-center justify-between gap-3">
+                    <div className="flex items-center rounded-lg border border-border bg-surface">
+                      <button
+                        onClick={() => onQuantityChange(item, item.quantity - 1)}
+                        disabled={isSaving}
+                        className="flex h-9 w-9 items-center justify-center text-text-secondary transition hover:bg-surface-hover hover:text-text-primary disabled:opacity-50"
+                        title="Decrease quantity"
+                      >
+                        <Minus className="h-4 w-4" />
+                      </button>
+                      <span className="w-10 text-center text-sm font-semibold text-text-primary">
+                        {item.quantity}
+                      </span>
+                      <button
+                        onClick={() => onQuantityChange(item, item.quantity + 1)}
+                        disabled={isSaving}
+                        className="flex h-9 w-9 items-center justify-center text-text-secondary transition hover:bg-surface-hover hover:text-text-primary disabled:opacity-50"
+                        title="Increase quantity"
+                      >
+                        <ChevronUp className="h-4 w-4" />
+                      </button>
+                    </div>
+                    <span className="text-base font-bold text-text-accent">
+                      ${formatMoney(item.total_price)}
+                    </span>
+                  </div>
                 </div>
-                <button
-                  onClick={() => removeItem(item)}
-                  className="p-1 text-text-muted hover:text-error transition-colors"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => updateQuantity(item, -1)}
-                  className="w-8 h-8 rounded-lg bg-surface-hover flex items-center justify-center text-text-primary hover:bg-primary hover:text-white transition-colors"
-                >
-                  <Minus className="w-4 h-4" />
-                </button>
-                <span className="w-8 text-center font-medium text-text-primary">
-                  {item.quantity}
-                </span>
-                <button
-                  onClick={() => updateQuantity(item, 1)}
-                  className="w-8 h-8 rounded-lg bg-surface-hover flex items-center justify-center text-text-primary hover:bg-primary hover:text-white transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
-              </div>
-
-              <input
-                type="text"
-                placeholder={t('pos.notes')}
-                value={item.notes}
-                onChange={(e) => updateNotes(item, e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-text-accent"
-              />
-            </div>
-          ))
+              );
+            })}
+          </div>
         )}
       </div>
 
-      {/* Totals */}
-      <div className="p-4 border-t border-border space-y-2">
-        <div className="flex justify-between text-sm">
-          <span className="text-text-secondary">{t('pos.subtotal')}</span>
-          <span className="text-text-primary font-medium">
-            ${subtotal.toFixed(2)}
-          </span>
-        </div>
-        <div className="flex justify-between text-sm">
-          <span className="text-text-secondary">{t('pos.tax')}</span>
-          <span className="text-text-primary font-medium">
-            ${tax.toFixed(2)}
-          </span>
-        </div>
-        <div className="flex justify-between text-sm">
-          <span className="text-text-secondary">{t('pos.serviceCharge')}</span>
-          <span className="text-text-primary font-medium">
-            ${serviceCharge.toFixed(2)}
-          </span>
-        </div>
-        {discount > 0 && (
-          <div className="flex justify-between text-sm">
-            <span className="text-text-secondary">{t('pos.discount')}</span>
-            <span className="text-success font-medium">
-              -${discount.toFixed(2)}
-            </span>
-          </div>
-        )}
-        {selectedGuest && (
-          <div className="flex justify-between text-sm">
-            <span className="text-text-secondary">Hotel Guest</span>
-            <span className="text-primary font-medium">
-              {selectedGuest.name}
-            </span>
-          </div>
-        )}
-        <div className="border-t border-border pt-2 mt-2">
+      <div className="border-t border-border p-4">
+        <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="font-display text-lg font-bold text-text-primary">
-              {t('pos.total')}
-            </span>
-            <span className="font-display text-lg font-bold text-text-accent">
-              ${total.toFixed(2)}
-            </span>
+            <span className="text-text-secondary">{t('pos.subtotal')}</span>
+            <span className="font-medium text-text-primary">${formatMoney(order?.subtotal)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-text-secondary">{t('pos.tax')}</span>
+            <span className="font-medium text-text-primary">${formatMoney(order?.tax_amount)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-text-secondary">{t('pos.serviceCharge')}</span>
+            <span className="font-medium text-text-primary">${formatMoney(order?.service_charge)}</span>
+          </div>
+          {toMoney(order?.discount_amount) > 0 && (
+            <div className="flex justify-between">
+              <span className="text-text-secondary">{t('pos.discount')}</span>
+              <span className="font-medium text-success">-${formatMoney(order?.discount_amount)}</span>
+            </div>
+          )}
+          {selectedGuest && (
+            <div className="flex justify-between">
+              <span className="text-text-secondary">Hotel Guest</span>
+              <span className="font-medium text-primary">{selectedGuest.name}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-3 border-t border-border pt-3">
+          <div className="flex items-center justify-between">
+            <span className="text-lg font-bold text-text-primary">{t('pos.total')}</span>
+            <span className="text-2xl font-bold text-text-accent">${formatMoney(total)}</span>
           </div>
         </div>
-      </div>
 
-      {/* Actions */}
-      <div className="p-4 border-t border-border space-y-2">
-        <button
-          disabled={cartItems.length === 0}
-          className="w-full py-3 rounded-lg bg-primary text-white font-medium hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          {selectedGuest ? 'Charge to Room' : t('pos.checkout')}
-        </button>
-        <button
-          onClick={() => setCartItems([])}
-          disabled={cartItems.length === 0}
-          className="w-full py-2 rounded-lg bg-surface text-text-secondary hover:bg-surface-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          {t('pos.clearCart')}
-        </button>
+        {items.length > 0 && (
+          <div className="mt-4 space-y-2">
+            {!showPaymentOptions ? (
+              <button
+                onClick={() => setShowPaymentOptions(true)}
+                disabled={loading}
+                className="w-full rounded-lg bg-primary py-3 font-semibold text-white shadow-medium transition hover:bg-primary/90 disabled:cursor-wait disabled:opacity-50"
+              >
+                Checkout
+              </button>
+            ) : (
+              <div className="space-y-2">
+                <p className="text-center text-sm font-medium text-text-secondary">Select Payment Method</p>
+                
+                <button
+                  onClick={() => handlePaymentSelect('cash')}
+                  disabled={loading}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-success py-3 font-semibold text-white shadow-medium transition-all duration-200 hover:bg-success/90 hover:shadow-lg disabled:cursor-wait disabled:opacity-50 premium-button"
+                >
+                  <DollarSign className="h-5 w-5" />
+                  Cash
+                </button>
+                
+                <button
+                  onClick={() => handlePaymentSelect('card')}
+                  disabled={loading}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-info py-3 font-semibold text-white shadow-medium transition-all duration-200 hover:bg-info/90 hover:shadow-lg disabled:cursor-wait disabled:opacity-50 premium-button"
+                >
+                  <CreditCard className="h-5 w-5" />
+                  Visa/Card
+                </button>
+                
+                <button
+                  onClick={() => handlePaymentSelect('guest')}
+                  disabled={loading}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-accent py-3 font-semibold text-white shadow-medium transition-all duration-200 hover:bg-accent/90 hover:shadow-lg disabled:cursor-wait disabled:opacity-50 premium-button"
+                >
+                  <Clock className="h-5 w-5" />
+                  Guest (Pay Later)
+                </button>
+                
+                <button
+                  onClick={() => setShowPaymentOptions(false)}
+                  disabled={loading}
+                  className="w-full rounded-lg border border-border py-2 font-medium text-text-secondary transition-all duration-200 hover:bg-surface-hover disabled:cursor-wait disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+
+            <button
+              onClick={onClearOrder}
+              disabled={loading}
+              className="w-full rounded-lg border border-error/30 py-2 font-medium text-error transition hover:bg-error/10 disabled:cursor-wait disabled:opacity-50"
+            >
+              Clear Order
+            </button>
+          </div>
+        )}
       </div>
-    </div>
+    </aside>
   );
-}
+});

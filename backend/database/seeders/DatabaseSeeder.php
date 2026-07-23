@@ -15,6 +15,9 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             PosRolesAndPermissionsSeeder::class,
+            DemoMenuSeeder::class,
+            TableSeeder::class,
+            PaymentMethodSeeder::class,
         ]);
 
         $user = User::firstOrCreate(

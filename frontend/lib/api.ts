@@ -413,9 +413,14 @@ export const ordersApi = {
     ),
 
   update: (id: number, data: {
-    status?: 'pending' | 'processing' | 'completed' | 'cancelled' | 'refunded';
+    order_type?: 'dine_in' | 'takeaway' | 'room_service';
+    status?: 'pending' | 'processing' | 'completed' | 'cancelled' | 'refunded' | 'pending_payment';
     table_number?: string;
+    guest_name?: string;
+    guest_room?: string;
+    guest_folio_id?: string;
     notes?: string;
+    discount_amount?: number;
     cancellation_reason?: string;
     refund_reason?: string;
   }) =>
@@ -433,7 +438,7 @@ export const ordersApi = {
     selected_modifiers?: Record<string, unknown>[];
     notes?: string;
   }) =>
-    request<{ message: string; data: import('@/types').OrderItem }>(
+    request<{ message: string; data: import('@/types').Order }>(
       `/orders/${orderId}/items`,
       { method: 'POST', body: JSON.stringify(data) }
     ),
@@ -442,13 +447,13 @@ export const ordersApi = {
     quantity?: number;
     notes?: string;
   }) =>
-    request<{ message: string; data: import('@/types').OrderItem }>(
+    request<{ message: string; data: import('@/types').Order }>(
       `/orders/${orderId}/items/${itemId}`,
       { method: 'PUT', body: JSON.stringify(data) }
     ),
 
   deleteItem: (orderId: number, itemId: number) =>
-    request<{ message: string }>(
+    request<{ message: string; data: import('@/types').Order }>(
       `/orders/${orderId}/items/${itemId}`,
       { method: 'DELETE' }
     ),
@@ -473,7 +478,7 @@ export const ordersApi = {
   cancel: (id: number, reason: string) =>
     request<{ message: string; data: import('@/types').Order }>(
       `/orders/${id}/cancel`,
-      { method: 'POST', body: JSON.stringify({ cancellation_reason: reason }) }
+      { method: 'POST', body: JSON.stringify({ reason }) }
     ),
 };
 
@@ -667,10 +672,10 @@ export const posSettingsApi = {
 
 export const paymentMethodsApi = {
   list: () =>
-    request<{ data: import('@/types').PaymentMethod[] }>('/payment-methods'),
+    request<{ data: import('@/types').PosPaymentMethod[] }>('/payment-methods'),
 
   get: (id: number) =>
-    request<{ data: import('@/types').PaymentMethod }>(`/payment-methods/${id}`),
+    request<{ data: import('@/types').PosPaymentMethod }>(`/payment-methods/${id}`),
 
   create: (data: {
     name: string;
@@ -678,7 +683,7 @@ export const paymentMethodsApi = {
     is_active?: boolean;
     sort_order?: number;
   }) =>
-    request<{ message: string; data: import('@/types').PaymentMethod }>(
+    request<{ message: string; data: import('@/types').PosPaymentMethod }>(
       '/payment-methods',
       { method: 'POST', body: JSON.stringify(data) }
     ),
@@ -689,13 +694,75 @@ export const paymentMethodsApi = {
     is_active?: boolean;
     sort_order?: number;
   }) =>
-    request<{ message: string; data: import('@/types').PaymentMethod }>(
+    request<{ message: string; data: import('@/types').PosPaymentMethod }>(
       `/payment-methods/${id}`,
       { method: 'PUT', body: JSON.stringify(data) }
     ),
 
   delete: (id: number) =>
     request<{ message: string }>(`/payment-methods/${id}`, { method: 'DELETE' }),
+};
+
+// ─── POS Tables API ─────────────────────────────────────────────────────────────────
+
+export const tablesApi = {
+  list: (params?: { status?: string }) => {
+    const queryString = new URLSearchParams();
+    if (params?.status) queryString.append('status', params.status);
+    const query = queryString.toString();
+    return request<{ data: import('@/types').Table[] }>(
+      `/tables${query ? `?${query}` : ''}`
+    );
+  },
+
+  get: (id: number) =>
+    request<{ data: import('@/types').Table }>(`/tables/${id}`),
+
+  create: (data: {
+    number: string;
+    name?: string;
+    capacity?: number;
+    location?: string;
+    notes?: string;
+  }) =>
+    request<{ message: string; data: import('@/types').Table }>(
+      '/tables',
+      { method: 'POST', body: JSON.stringify(data) }
+    ),
+
+  update: (id: number, data: {
+    number?: string;
+    name?: string;
+    capacity?: number;
+    status?: string;
+    location?: string;
+    notes?: string;
+  }) =>
+    request<{ message: string; data: import('@/types').Table }>(
+      `/tables/${id}`,
+      { method: 'PUT', body: JSON.stringify(data) }
+    ),
+
+  delete: (id: number) =>
+    request<{ message: string }>(`/tables/${id}`, { method: 'DELETE' }),
+
+  updateStatus: (id: number, status: string) =>
+    request<{ message: string; data: import('@/types').Table }>(
+      `/tables/${id}/status`,
+      { method: 'PUT', body: JSON.stringify({ status }) }
+    ),
+
+  getOrCreateOrder: (id: number) =>
+    request<{ data: import('@/types').Order }>(
+      `/tables/${id}/order`,
+      { method: 'POST', body: JSON.stringify({}) }
+    ),
+
+  completeOrder: (id: number) =>
+    request<{ message: string; data: import('@/types').Order }>(
+      `/tables/${id}/complete`,
+      { method: 'POST', body: JSON.stringify({}) }
+    ),
 };
 
 // ─── POS Reports API ───────────────────────────────────────────────────────────────

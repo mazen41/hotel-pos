@@ -7,6 +7,15 @@ import { returnsApi, ordersApi } from '@/lib/api';
 import type { OrderReturn, Order } from '@/types';
 import { ArrowLeft, CheckCircle, XCircle, DollarSign, Package, AlertCircle } from 'lucide-react';
 
+function toMoney(value: number | string | null | undefined) {
+  const amount = Number(value ?? 0);
+  return Number.isFinite(amount) ? amount : 0;
+}
+
+function formatMoney(value: number | string | null | undefined) {
+  return toMoney(value).toFixed(2);
+}
+
 export default function ReturnsPage() {
   const t = useTranslations();
   const { can } = usePermissions();
@@ -81,7 +90,7 @@ export default function ReturnsPage() {
     setReturnData({
       order_id: order.id,
       reason: '',
-      refund_amount: order.total
+      refund_amount: toMoney(order.total)
     });
   };
 
@@ -169,7 +178,7 @@ export default function ReturnsPage() {
               <div>
                 <p className="text-sm text-text-secondary">Total Refunded</p>
                 <p className="font-display text-2xl font-bold text-error">
-                  ${returns.filter(r => r.status === 'approved').reduce((sum, r) => sum + r.total_amount, 0).toFixed(2)}
+                  ${returns.filter(r => r.status === 'approved').reduce((sum, r) => sum + toMoney(r.total_amount), 0).toFixed(2)}
                 </p>
               </div>
             </div>
@@ -202,7 +211,7 @@ export default function ReturnsPage() {
                     </div>
                     <div className="text-right">
                       <p className="font-display font-bold text-error">
-                        ${returnItem.total_amount.toFixed(2)}
+                        ${formatMoney(returnItem.total_amount)}
                       </p>
                       <p className="text-sm text-text-muted">
                         Refund Amount
@@ -282,7 +291,7 @@ export default function ReturnsPage() {
                       {new Date(order.created_at).toLocaleString()}
                     </td>
                     <td className="py-3 px-4 text-text-accent font-display font-bold">
-                      ${order.total.toFixed(2)}
+                      ${formatMoney(order.total)}
                     </td>
                     <td className="py-3 px-4">
                       <span className="px-2 py-1 rounded-full text-xs font-medium bg-success bg-opacity-10 text-success">
@@ -343,7 +352,7 @@ export default function ReturnsPage() {
 
                   <div className="text-right">
                     <p className="font-display font-bold text-text-primary">
-                      ${returnItem.total_amount.toFixed(2)}
+                      ${formatMoney(returnItem.total_amount)}
                     </p>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                       returnItem.status === 'approved' ? 'bg-success bg-opacity-10 text-success' :
@@ -372,7 +381,7 @@ export default function ReturnsPage() {
               <div className="mb-4 p-4 bg-surface-elevated rounded-lg">
                 <p className="text-sm text-text-secondary">Order #{selectedOrder.id}</p>
                 <p className="font-display text-lg font-bold text-text-primary">
-                  ${selectedOrder.total.toFixed(2)}
+                  ${formatMoney(selectedOrder.total)}
                 </p>
               </div>
             )}
@@ -388,7 +397,7 @@ export default function ReturnsPage() {
                   onChange={(e) => setReturnData({ ...returnData, refund_amount: parseFloat(e.target.value) || 0 })}
                   className="w-full px-4 py-3 rounded-lg bg-surface-elevated border border-border text-text-primary focus:outline-none focus:border-text-accent"
                   step="0.01"
-                  max={selectedOrder?.total}
+                  max={selectedOrder ? toMoney(selectedOrder.total) : undefined}
                 />
               </div>
 

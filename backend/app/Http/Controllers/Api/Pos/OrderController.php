@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class OrderController extends Controller
 {
@@ -21,7 +22,7 @@ class OrderController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Order::with(['items.menuItem', 'payments', 'cashShift'])
+        $query = Order::with(['orderItems.menuItem', 'payments.paymentMethod', 'cashShift'])
             ->where('user_id', Auth::id());
 
         if ($request->has('status')) {
@@ -82,7 +83,7 @@ class OrderController extends Controller
 
         return response()->json([
             'message' => 'Order created successfully',
-            'data' => $order->load('items')
+            'data' => $order->load('orderItems.menuItem', 'payments.paymentMethod', 'cashShift')
         ], 201);
     }
 
@@ -93,7 +94,7 @@ class OrderController extends Controller
     {
         $this->authorize('view', $order);
 
-        $order->load(['items.menuItem', 'payments', 'cashShift']);
+        $order->load(['orderItems.menuItem', 'payments.paymentMethod', 'cashShift']);
 
         return response()->json(['data' => $order]);
     }
@@ -125,7 +126,7 @@ class OrderController extends Controller
 
         return response()->json([
             'message' => 'Order updated successfully',
-            'data' => $order->load('items')
+            'data' => $order->load('orderItems.menuItem', 'payments.paymentMethod', 'cashShift')
         ]);
     }
 
@@ -163,7 +164,7 @@ class OrderController extends Controller
             'price' => 'sometimes|numeric|min:0'
         ]);
 
-        $menuItem = \App\Models\MenuItem::findOrFail($request->menu_item_id);
+        $menuItem = \App\Models\MenuItem::where('is_active', true)->findOrFail($request->menu_item_id);
         $price = $request->price ?? $menuItem->price;
 
         $orderItem = OrderItem::create([
@@ -180,7 +181,7 @@ class OrderController extends Controller
 
         return response()->json([
             'message' => 'Item added to order successfully',
-            'data' => $order->load('items.menuItem')
+            'data' => $order->fresh()->load('orderItems.menuItem', 'payments.paymentMethod', 'cashShift')
         ], 201);
     }
 
@@ -223,7 +224,7 @@ class OrderController extends Controller
 
         return response()->json([
             'message' => 'Item updated successfully',
-            'data' => $order->load('items.menuItem')
+            'data' => $order->fresh()->load('orderItems.menuItem', 'payments.paymentMethod', 'cashShift')
         ]);
     }
 
@@ -247,7 +248,7 @@ class OrderController extends Controller
 
         return response()->json([
             'message' => 'Item removed from order successfully',
-            'data' => $order->load('items.menuItem')
+            'data' => $order->fresh()->load('orderItems.menuItem', 'payments.paymentMethod', 'cashShift')
         ]);
     }
 
@@ -259,12 +260,13 @@ class OrderController extends Controller
         $this->authorize('update', $order);
 
         $request->validate([
-            'payment_method' => 'required|string',
+            'payment_method_id' => 'required|exists:payment_methods,id',
             'amount' => 'required|numeric|min:0.01',
-            'reference' => 'nullable|string'
+            'reference_number' => 'nullable|string',
+            'notes' => 'nullable|string',
         ]);
 
-        if ($request->amount > ($order->total - $order->paid_amount)) {
+        if ($request->amount > ((float) $order->total - (float) $order->paid_amount)) {
             return response()->json([
                 'message' => 'Payment amount exceeds remaining balance'
             ], 400);
@@ -272,24 +274,20 @@ class OrderController extends Controller
 
         $payment = OrderPayment::create([
             'order_id' => $order->id,
-            'payment_method' => $request->payment_method,
+            'payment_method_id' => $request->payment_method_id,
             'amount' => $request->amount,
-            'reference' => $request->reference
+            'reference_number' => $request->reference_number,
+            'notes' => $request->notes,
         ]);
 
         // Update order paid amount
-        $order->paid_amount += $request->amount;
-        
-        // Calculate change if cash payment
-        if ($request->payment_method === 'cash' && $order->paid_amount > $order->total) {
-            $order->change_amount = $order->paid_amount - $order->total;
-        }
-        
+        $order->paid_amount = (float) $order->paid_amount + (float) $request->amount;
+        $order->change_amount = max(0, (float) $order->paid_amount - (float) $order->total);
         $order->save();
 
         return response()->json([
             'message' => 'Payment added successfully',
-            'data' => $order->load('payments')
+            'data' => $order->fresh()->load('orderItems.menuItem', 'payments.paymentMethod', 'cashShift')
         ], 201);
     }
 
@@ -306,7 +304,8 @@ class OrderController extends Controller
             ], 400);
         }
 
-        if ($order->paid_amount < $order->total) {
+        // Allow completion for paid orders or pending_payment (guest checkout)
+        if ($order->paid_amount < $order->total && $order->status !== 'pending_payment') {
             return response()->json([
                 'message' => 'Cannot complete order with unpaid balance'
             ], 400);
@@ -318,15 +317,23 @@ class OrderController extends Controller
                 'completed_at' => now()
             ]);
 
+            // Update table status to available if this order has a table
+            if ($order->table_id) {
+                $table = $order->table;
+                if ($table) {
+                    $table->update(['status' => 'available']);
+                }
+            }
+
             // Deduct inventory for menu items
-            foreach ($order->items as $item) {
+            foreach ($order->orderItems as $item) {
                 $this->deductInventoryForMenuItem($item);
             }
         });
 
         return response()->json([
             'message' => 'Order completed successfully',
-            'data' => $order->load('items.menuItem')
+            'data' => $order->fresh()->load('orderItems.menuItem', 'payments.paymentMethod', 'cashShift', 'table')
         ]);
     }
 
@@ -390,7 +397,7 @@ class OrderController extends Controller
      */
     private function recalculateOrderTotals(Order $order): void
     {
-        $subtotal = $order->items->sum('total_price');
+        $subtotal = $order->orderItems()->sum('total_price');
         
         // Get POS settings for tax and service charge
         $settings = \App\Models\PosSetting::first();
@@ -416,12 +423,12 @@ class OrderController extends Controller
     {
         $menuItem = $item->menuItem;
         if (!$menuItem) return;
+        if (!Schema::hasTable('menu_item_inventory')) return;
 
-        foreach ($menuItem->inventory as $inventoryItem) {
-            $inventory = $inventoryItem->inventory;
+        foreach ($menuItem->inventory as $inventory) {
             if (!$inventory) continue;
 
-            $quantityNeeded = $inventoryItem->quantity * $item->quantity;
+            $quantityNeeded = $inventory->pivot->quantity * $item->quantity;
             
             if ($inventory->current_stock >= $quantityNeeded) {
                 $inventory->current_stock -= $quantityNeeded;

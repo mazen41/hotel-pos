@@ -223,6 +223,7 @@
   },
   "layout": {
     "posOS": "Hotel POS",
+    "hotelOS": "Hotel OS",
     "pos": "POS",
     "orders": "Orders",
     "inventory": "Inventory",

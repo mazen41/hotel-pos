@@ -42,4 +42,10 @@ class MenuItem extends Model
     {
         return $this->hasMany(OrderItem::class);
     }
+
+    public function inventory(): BelongsToMany
+    {
+        return $this->belongsToMany(Inventory::class, 'menu_item_inventory')
+            ->withPivot('quantity');
+    }
 }

@@ -23,6 +23,14 @@ class MenuItemController extends Controller
             $query->where('is_active', true);
         }
 
+        if ($request->filled('search')) {
+            $search = $request->query('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
         return response()->json([
             'data' => $query->get(),
         ]);
