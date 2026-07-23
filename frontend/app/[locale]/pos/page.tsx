@@ -11,9 +11,10 @@ import { TableGrid } from '@/components/pos/TableGrid';
 import { MenuGrid } from '@/components/pos/MenuGrid';
 import { CartPanel } from '@/components/pos/CartPanel';
 import { Receipt } from '@/components/pos/Receipt';
-import { ArrowLeft, DollarSign, X, Receipt as ReceiptIcon } from 'lucide-react';
+import { ArrowLeft, DollarSign, X, Receipt as ReceiptIcon, ShoppingCart } from 'lucide-react';
 import type { CashShift, MenuItem, OrderItem, Order } from '@/types';
-import { toMoneyNumber } from '@/lib/money';
+import { formatCurrency, toMoneyNumber } from '@/lib/money';
+import { usePosSettings } from '@/contexts/PosSettingsContext';
 
 // Laravel serializes camelCase relations as snake_case in JSON (order_items, not orderItems)
 function getOrderItems(order: Order | null) {
@@ -23,6 +24,7 @@ function getOrderItems(order: Order | null) {
 export default function POSPage() {
   const t = useTranslations();
   const { can } = usePermissions();
+  const { settings } = usePosSettings();
 
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -32,6 +34,7 @@ export default function POSPage() {
   const [currentShift, setCurrentShift] = useState<CashShift | null>(null);
   const [showOpenShiftDialog, setShowOpenShiftDialog] = useState(false);
   const [openingShift, setOpeningShift] = useState(false);
+  const [cartDrawerOpen, setCartDrawerOpen] = useState(false);
   const [shiftForm, setShiftForm] = useState({ shift_name: 'Morning Shift', shift_taker: '', opening_cash: '500' });
   const hasLoadedData = useRef(false);
 
@@ -214,7 +217,9 @@ export default function POSPage() {
         setReceiptTableNumber(tableOrders.selectedTable.number);
         tableOrders.showNotice(`Payment completed via ${paymentMethod === 'cash' ? 'Cash' : 'Visa/Card'}`);
         setShowReceipt(true);
-        window.setTimeout(() => window.print(), 150);
+        if (settings?.auto_print_receipt) {
+          window.setTimeout(() => window.print(), 150);
+        }
         tableOrders.backToTables();
       }
     } catch (error) {
@@ -340,17 +345,62 @@ export default function POSPage() {
 
         {/* Cart Panel - Only show when table is selected */}
         {tableOrders.selectedTable && (
-          <CartPanel
-            order={tableOrders.activeOrder}
-            loading={tableOrders.loadingOrder}
-            savingItemId={tableOrders.busyItemId}
-            onQuantityChange={handleQuantityChange}
-            onRemoveItem={handleRemoveItem}
-            onClearOrder={handleClearOrder}
-            onCheckout={handleCheckout}
-          />
+          <div className="hidden lg:block lg:w-[420px]">
+            <CartPanel
+              order={tableOrders.activeOrder}
+              loading={tableOrders.loadingOrder}
+              savingItemId={tableOrders.busyItemId}
+              onQuantityChange={handleQuantityChange}
+              onRemoveItem={handleRemoveItem}
+              onClearOrder={handleClearOrder}
+              onCheckout={handleCheckout}
+            />
+          </div>
         )}
       </div>
+
+      {tableOrders.selectedTable && (
+        <button
+          type="button"
+          onClick={() => setCartDrawerOpen(true)}
+          className="fixed bottom-5 right-5 z-30 flex min-h-12 items-center gap-3 rounded-full bg-primary px-5 py-3 font-semibold text-white shadow-2xl lg:hidden"
+          aria-label={t('pos.cartDrawerToggle')}
+        >
+          <ShoppingCart className="h-5 w-5" />
+          <span>{itemCount}</span>
+          <span>{formatCurrency(tableOrders.activeOrder?.total)}</span>
+        </button>
+      )}
+
+      {tableOrders.selectedTable && cartDrawerOpen && (
+        <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setCartDrawerOpen(false)}>
+          <div
+            className="absolute inset-x-0 bottom-0 h-[86vh] overflow-hidden rounded-t-3xl bg-surface shadow-2xl animate-slide-up"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex justify-center border-b border-border py-2">
+              <button
+                type="button"
+                onClick={() => setCartDrawerOpen(false)}
+                className="h-1.5 w-14 rounded-full bg-text-muted/40"
+                aria-label="Close cart drawer"
+              />
+            </div>
+            <CartPanel
+              order={tableOrders.activeOrder}
+              loading={tableOrders.loadingOrder}
+              savingItemId={tableOrders.busyItemId}
+              onQuantityChange={handleQuantityChange}
+              onRemoveItem={handleRemoveItem}
+              onClearOrder={handleClearOrder}
+              onCheckout={(method) => {
+                setCartDrawerOpen(false);
+                handleCheckout(method);
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Receipt Modal */}
       {showReceipt && (receiptOrder || tableOrders.activeOrder) && (

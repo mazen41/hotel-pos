@@ -6,6 +6,7 @@ import { Minus, Trash2, ShoppingBag, Hotel, ChevronUp, ReceiptText, DollarSign, 
 import type { HotelGuest, Order, OrderItem } from '@/types';
 import { HotelIntegration } from './HotelIntegration';
 import { formatCurrency, toMoneyNumber } from '@/lib/money';
+import { usePosSettings } from '@/contexts/PosSettingsContext';
 
 interface CartPanelProps {
   order: Order | null;
@@ -30,11 +31,14 @@ export const CartPanel = memo(function CartPanel({
   const [selectedGuest, setSelectedGuest] = useState<HotelGuest | null>(null);
   const [showHotelIntegration, setShowHotelIntegration] = useState(false);
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
+  const { settings } = usePosSettings();
 
   // Laravel serializes camelCase relations as snake_case in JSON (order_items, not orderItems)
   const items = order?.order_items ?? order?.orderItems ?? [];
   const itemCount = useMemo(() => items.reduce((sum, item) => sum + item.quantity, 0), [items]);
   const total = toMoneyNumber(order?.total);
+  const showTax = Boolean(settings?.tax_enabled) && toMoneyNumber(order?.tax_amount) > 0;
+  const showServiceCharge = Boolean(settings?.service_charge_enabled) && toMoneyNumber(order?.service_charge) > 0;
 
   const handleChargeToFolio = async (guest: HotelGuest, amount: number) => {
     console.log('Charging to folio:', guest.id, amount);
@@ -158,20 +162,24 @@ export const CartPanel = memo(function CartPanel({
         )}
       </div>
 
-      <div className="border-t border-border p-4">
+      <div className="sticky bottom-0 border-t border-border bg-surface p-4 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-text-secondary">{t('pos.subtotal')}</span>
             <span className="font-medium text-text-primary">{formatCurrency(order?.subtotal)}</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-text-secondary">{t('pos.tax')}</span>
-            <span className="font-medium text-text-primary">{formatCurrency(order?.tax_amount)}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-text-secondary">{t('pos.serviceCharge')}</span>
-            <span className="font-medium text-text-primary">{formatCurrency(order?.service_charge)}</span>
-          </div>
+          {showTax && (
+            <div className="flex justify-between">
+              <span className="text-text-secondary">{t('pos.tax')} ({settings?.tax_percentage ?? 0}%)</span>
+              <span className="font-medium text-text-primary">{formatCurrency(order?.tax_amount)}</span>
+            </div>
+          )}
+          {showServiceCharge && (
+            <div className="flex justify-between">
+              <span className="text-text-secondary">{t('pos.serviceCharge')} ({settings?.service_charge_percentage ?? 0}%)</span>
+              <span className="font-medium text-text-primary">{formatCurrency(order?.service_charge)}</span>
+            </div>
+          )}
           {toMoneyNumber(order?.discount_amount) > 0 && (
             <div className="flex justify-between">
               <span className="text-text-secondary">{t('pos.discount')}</span>
@@ -199,7 +207,7 @@ export const CartPanel = memo(function CartPanel({
               <button
                 onClick={() => setShowPaymentOptions(true)}
                 disabled={loading}
-                className="w-full rounded-lg bg-primary py-3 font-semibold text-white shadow-medium transition hover:bg-primary/90 disabled:cursor-wait disabled:opacity-50"
+                className="min-h-11 w-full rounded-lg bg-primary py-3 font-semibold text-white shadow-medium transition hover:bg-primary/90 disabled:cursor-wait disabled:opacity-50"
               >
                 Checkout
               </button>
@@ -210,7 +218,7 @@ export const CartPanel = memo(function CartPanel({
                 <button
                   onClick={() => handlePaymentSelect('cash')}
                   disabled={loading}
-                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-success py-3 font-semibold text-white shadow-medium transition-all duration-200 hover:bg-success/90 hover:shadow-lg disabled:cursor-wait disabled:opacity-50 premium-button"
+                  className="flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-success py-3 font-semibold text-white shadow-medium transition-all duration-200 hover:bg-success/90 hover:shadow-lg disabled:cursor-wait disabled:opacity-50 premium-button"
                 >
                   <DollarSign className="h-5 w-5" />
                   Cash
@@ -219,7 +227,7 @@ export const CartPanel = memo(function CartPanel({
                 <button
                   onClick={() => handlePaymentSelect('card')}
                   disabled={loading}
-                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-info py-3 font-semibold text-white shadow-medium transition-all duration-200 hover:bg-info/90 hover:shadow-lg disabled:cursor-wait disabled:opacity-50 premium-button"
+                  className="flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-info py-3 font-semibold text-white shadow-medium transition-all duration-200 hover:bg-info/90 hover:shadow-lg disabled:cursor-wait disabled:opacity-50 premium-button"
                 >
                   <CreditCard className="h-5 w-5" />
                   Visa/Card
@@ -228,7 +236,7 @@ export const CartPanel = memo(function CartPanel({
                 <button
                   onClick={() => handlePaymentSelect('guest')}
                   disabled={loading}
-                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-accent py-3 font-semibold text-white shadow-medium transition-all duration-200 hover:bg-accent/90 hover:shadow-lg disabled:cursor-wait disabled:opacity-50 premium-button"
+                  className="flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-accent py-3 font-semibold text-white shadow-medium transition-all duration-200 hover:bg-accent/90 hover:shadow-lg disabled:cursor-wait disabled:opacity-50 premium-button"
                 >
                   <Clock className="h-5 w-5" />
                   Guest (Pay Later)

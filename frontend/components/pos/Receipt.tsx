@@ -4,6 +4,7 @@ import { useRef } from 'react';
 import { Printer, X } from 'lucide-react';
 import type { Order } from '@/types';
 import { formatCurrency, toMoneyNumber } from '@/lib/money';
+import { usePosSettings } from '@/contexts/PosSettingsContext';
 
 interface ReceiptProps {
   order: Order | null;
@@ -18,6 +19,7 @@ function getOrderItems(order: Order | null) {
 
 export function Receipt({ order, tableNumber, onClose, onPrint }: ReceiptProps) {
   const receiptRef = useRef<HTMLDivElement>(null);
+  const { settings } = usePosSettings();
 
   const items = getOrderItems(order);
   const subtotal = toMoneyNumber(order?.subtotal);
@@ -27,6 +29,8 @@ export function Receipt({ order, tableNumber, onClose, onPrint }: ReceiptProps) 
   const total = toMoneyNumber(order?.total);
   const paid = toMoneyNumber(order?.paid_amount);
   const change = toMoneyNumber(order?.change_amount);
+  const showTax = Boolean(settings?.tax_enabled) && tax > 0;
+  const showServiceCharge = Boolean(settings?.service_charge_enabled) && serviceCharge > 0;
 
   const handlePrint = () => {
     if (onPrint) {
@@ -63,7 +67,7 @@ export function Receipt({ order, tableNumber, onClose, onPrint }: ReceiptProps) 
         </div>
 
         {/* Receipt Content */}
-        <div ref={receiptRef} className="flex-1 overflow-y-auto p-6">
+        <div ref={receiptRef} className="receipt-print flex-1 overflow-y-auto p-6">
           <div className="space-y-4 text-sm">
             {/* Restaurant Info */}
             <div className="text-center">
@@ -130,14 +134,18 @@ export function Receipt({ order, tableNumber, onClose, onPrint }: ReceiptProps) 
                 <span className="text-text-muted">Subtotal:</span>
                 <span className="font-medium text-text-primary">{formatCurrency(subtotal)}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-text-muted">Tax:</span>
-                <span className="font-medium text-text-primary">{formatCurrency(tax)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-text-muted">Service Charge:</span>
-                <span className="font-medium text-text-primary">{formatCurrency(serviceCharge)}</span>
-              </div>
+              {showTax && (
+                <div className="flex justify-between">
+                  <span className="text-text-muted">Tax ({settings?.tax_percentage ?? 0}%):</span>
+                  <span className="font-medium text-text-primary">{formatCurrency(tax)}</span>
+                </div>
+              )}
+              {showServiceCharge && (
+                <div className="flex justify-between">
+                  <span className="text-text-muted">Service Charge ({settings?.service_charge_percentage ?? 0}%):</span>
+                  <span className="font-medium text-text-primary">{formatCurrency(serviceCharge)}</span>
+                </div>
+              )}
               {discount > 0 && (
                 <div className="flex justify-between">
                   <span className="text-text-muted">Discount:</span>
@@ -185,7 +193,7 @@ export function Receipt({ order, tableNumber, onClose, onPrint }: ReceiptProps) 
 
             {/* Footer */}
             <div className="border-t border-border pt-4 text-center">
-              <p className="text-text-muted">Thank you for dining with us!</p>
+              <p className="text-text-muted">{settings?.receipt_footer || 'Thank you for dining with us!'}</p>
               <p className="text-xs text-text-muted">Please come again</p>
             </div>
           </div>
