@@ -4,21 +4,21 @@
 
 :root {
   /* Premium palette - Dark mode (default) */
-  --color-background: #1a1814; /* Warm charcoal */
-  --color-surface: #242019; /* Darker warm charcoal */
-  --color-surface-elevated: #2e2920; /* Elevated surface */
-  --color-surface-hover: #3a3429; /* Hover state */
-  
+  --color-background: #1a1814;
+  --color-surface: #242019;
+  --color-surface-elevated: #2e2920;
+  --color-surface-hover: #3a3429;
+
   /* Text colors */
-  --color-text-primary: #f5f2ed; /* Warm cream */
-  --color-text-secondary: #b8b4ae; /* Muted warm gray */
-  --color-text-muted: #8b8680; /* More muted */
-  --color-text-accent: #d4a574; /* Muted gold accent */
-  
+  --color-text-primary: #f5f2ed;
+  --color-text-secondary: #b8b4ae;
+  --color-text-muted: #8b8680;
+  --color-text-accent: #d4a574;
+
   /* Border colors */
-  --color-border: #3a3429; /* Subtle border */
-  --color-border-subtle: #2e2920; /* Very subtle */
-  
+  --color-border: #3a3429;
+  --color-border-subtle: #2e2920;
+
   /* Font families */
   --font-display: 'Playfair Display', 'Georgia', serif;
   --font-body: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -27,21 +27,18 @@
 
 /* Light mode */
 .light {
-  /* Premium palette - Light mode */
-  --color-background: #faf8f5; /* Warm cream */
-  --color-surface: #ffffff; /* Pure white */
-  --color-surface-elevated: #f5f2ed; /* Slightly darker cream */
-  --color-surface-hover: #ece9e4; /* Hover state */
-  
-  /* Text colors */
-  --color-text-primary: #1a1814; /* Warm charcoal */
-  --color-text-secondary: #5c5954; /* Muted warm gray */
-  --color-text-muted: #8b8680; /* More muted */
-  --color-text-accent: #a3703e; /* Darker gold accent */
-  
-  /* Border colors */
-  --color-border: #e5e2dd; /* Subtle border */
-  --color-border-subtle: #f0ede8; /* Very subtle */
+  --color-background: #faf8f5;
+  --color-surface: #ffffff;
+  --color-surface-elevated: #f5f2ed;
+  --color-surface-hover: #ece9e4;
+
+  --color-text-primary: #1a1814;
+  --color-text-secondary: #5c5954;
+  --color-text-muted: #8b8680;
+  --color-text-accent: #a3703e;
+
+  --color-border: #e5e2dd;
+  --color-border-subtle: #f0ede8;
 }
 
 * {
@@ -61,23 +58,14 @@ body {
   color: var(--color-text-primary);
   font-family: var(--font-body);
   line-height: 1.6;
+  overflow-x: hidden;
 }
 
 /* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-::-webkit-scrollbar-track {
-  background: var(--color-surface);
-}
-::-webkit-scrollbar-thumb {
-  background: var(--color-border);
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-muted);
-}
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--color-surface); }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-text-muted); }
 
 /* Focus ring */
 :focus-visible {
@@ -91,61 +79,30 @@ body {
   color: var(--color-background);
 }
 
-/* Glass effect */
+/* ─── Glass effect ─────────────────────────────────────────────────────────── */
 .glass {
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
-
 .light .glass {
   background: rgba(255, 255, 255, 0.7);
   border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-/* RTL support */
-[dir="rtl"] {
-  direction: rtl;
-}
+/* ─── RTL support ──────────────────────────────────────────────────────────── */
+[dir="rtl"] { direction: rtl; }
+[dir="rtl"] .space-x-2 > * + * { margin-left: 0; margin-right: 0.5rem; }
+[dir="rtl"] .space-x-4 > * + * { margin-left: 0; margin-right: 1rem; }
+[dir="rtl"] .ml-2 { margin-left: 0; margin-right: 0.5rem; }
+[dir="rtl"] .ml-4 { margin-left: 0; margin-right: 1rem; }
+[dir="rtl"] .mr-2 { margin-right: 0; margin-left: 0.5rem; }
+[dir="rtl"] .mr-4 { margin-right: 0; margin-left: 1rem; }
 
-[dir="rtl"] .space-x-2 > * + * {
-  margin-left: 0;
-  margin-right: 0.5rem;
-}
-
-[dir="rtl"] .space-x-4 > * + * {
-  margin-left: 0;
-  margin-right: 1rem;
-}
-
-[dir="rtl"] .ml-2 {
-  margin-left: 0;
-  margin-right: 0.5rem;
-}
-
-[dir="rtl"] .ml-4 {
-  margin-left: 0;
-  margin-right: 1rem;
-}
-
-[dir="rtl"] .mr-2 {
-  margin-right: 0;
-  margin-left: 0.5rem;
-}
-
-[dir="rtl"] .mr-4 {
-  margin-right: 0;
-  margin-left: 1rem;
-}
-
-/* Premium UI enhancements */
+/* ─── Premium UI enhancements ──────────────────────────────────────────────── */
 .premium-shadow {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-.premium-border {
-  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .glass-effect {
@@ -154,98 +111,202 @@ body {
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
-
 .light .glass-effect {
   background: rgba(255, 255, 255, 0.8);
   border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-/* Smooth transitions */
-.smooth-transition {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Premium button styles */
-.premium-button {
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-
-.premium-button::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  transition: width 0.3s ease, height 0.3s ease;
-}
-
-.premium-button:active::after {
-  width: 200px;
-  height: 200px;
-}
-
-/* Status indicator dots */
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  display: inline-block;
-  animation: pulse 2s infinite;
-}
-
+/* ─── Animations ───────────────────────────────────────────────────────────── */
 @keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
-/* Enhanced loading state */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-in  { animation: fadeIn 0.2s ease forwards; }
+.animate-slide-up { animation: slideUp 0.3s cubic-bezier(0.4,0,0.2,1) forwards; }
+.animate-scale-in { animation: scaleIn 0.2s cubic-bezier(0.4,0,0.2,1) forwards; }
+
+/* ─── Loading shimmer ──────────────────────────────────────────────────────── */
 .loading-shimmer {
-  background: linear-gradient(90deg, 
-    var(--color-surface) 0%, 
-    var(--color-surface-hover) 50%, 
+  background: linear-gradient(90deg,
+    var(--color-surface) 0%,
+    var(--color-surface-hover) 50%,
     var(--color-surface) 100%
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
 
-@keyframes shimmer {
-  0% {
-    background-position: 200% 0;
+/* ─── Status dots ──────────────────────────────────────────────────────────── */
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  animation: pulse-dot 2s infinite;
+}
+
+/* ─── Premium button ───────────────────────────────────────────────────────── */
+.premium-button {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.25s ease;
+  transform: translateZ(0);
+}
+.premium-button::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 0; height: 0;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.4s ease, height 0.4s ease;
+}
+.premium-button:active::after {
+  width: 300px;
+  height: 300px;
+}
+
+/* ─── Touch-friendly minimum sizes ────────────────────────────────────────── */
+button, [role="button"], a[href] {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Override for inline/decorative elements */
+.btn-icon-sm {
+  min-height: 32px !important;
+  min-width: 32px !important;
+}
+
+/* ─── Mobile card drawer ───────────────────────────────────────────────────── */
+.cart-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 40;
+  animation: fadeIn 0.2s ease;
+}
+.cart-drawer {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 41;
+  max-height: 90vh;
+  border-radius: 16px 16px 0 0;
+  overflow: hidden;
+  animation: slideUp 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* ─── Responsive helpers ───────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  body {
+    font-size: 15px;
   }
-  100% {
-    background-position: -200% 0;
+  .hide-on-mobile {
+    display: none !important;
   }
 }
 
+@media (min-width: 769px) {
+  .show-on-mobile-only {
+    display: none !important;
+  }
+}
+
+/* No horizontal scroll anywhere */
+html, body, #__next {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* ─── Tailwind component extensions ────────────────────────────────────────── */
 @layer components {
   .field {
     @apply w-full rounded-lg border border-border bg-surface-elevated px-4 py-3 text-text-primary outline-none transition focus:border-text-accent;
+    min-height: 44px;
   }
 
   .action {
-    @apply inline-flex min-h-10 items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-semibold text-text-secondary transition hover:bg-surface-hover hover:text-text-primary;
+    @apply inline-flex min-h-11 items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-semibold text-text-secondary transition hover:bg-surface-hover hover:text-text-primary;
   }
 
   .action-danger {
-    @apply inline-flex min-h-10 items-center gap-2 rounded-lg border border-error/30 px-3 py-2 text-sm font-semibold text-error transition hover:bg-error/10;
+    @apply inline-flex min-h-11 items-center gap-2 rounded-lg border border-error/30 px-3 py-2 text-sm font-semibold text-error transition hover:bg-error/10;
   }
 
   .btn-secondary {
-    @apply flex-1 rounded-xl border border-border px-4 py-3 text-center font-semibold text-text-secondary transition hover:bg-surface-hover;
+    @apply flex-1 rounded-xl border border-border px-4 py-3 text-center font-semibold text-text-secondary transition hover:bg-surface-hover min-h-11;
   }
 
   .btn-danger {
-    @apply flex-1 rounded-xl bg-error px-4 py-3 text-center font-semibold text-white transition hover:bg-error/90 disabled:opacity-60;
+    @apply flex-1 rounded-xl bg-error px-4 py-3 text-center font-semibold text-white transition hover:bg-error/90 disabled:opacity-60 min-h-11;
+  }
+
+  .btn-primary {
+    @apply w-full rounded-xl bg-primary px-4 py-3 font-semibold text-white shadow-medium transition hover:bg-primary/90 disabled:opacity-60 min-h-11;
+  }
+
+  .card {
+    @apply rounded-2xl border border-border bg-surface p-5 shadow-soft;
+  }
+
+  .toggle-btn {
+    @apply relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none;
+  }
+
+  .toggle-thumb {
+    @apply pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out;
+  }
+}
+
+/* ─── Print styles ─────────────────────────────────────────────────────────── */
+@media print {
+  /* Hide everything except receipt */
+  body * {
+    visibility: hidden;
+  }
+  .receipt-print, .receipt-print * {
+    visibility: visible;
+  }
+  .receipt-print {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 80mm; /* Standard thermal receipt width */
+    padding: 8px;
+    background: white;
+    color: black;
+    font-size: 12px;
+    font-family: 'Courier New', monospace;
+  }
+  /* Hide all nav, sidebar, topbar, buttons */
+  aside, nav, header, footer, .no-print, button {
+    display: none !important;
   }
 }

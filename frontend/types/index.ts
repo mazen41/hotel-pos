@@ -319,7 +319,9 @@ export interface PosSetting {
   default_payment_method: string;
   receipt_footer: string | null;
   tax_percentage: number;
+  tax_enabled: boolean;
   service_charge_percentage: number;
+  service_charge_enabled: boolean;
   currency: string;
   currency_symbol: string;
   auto_approve_return_threshold: number;

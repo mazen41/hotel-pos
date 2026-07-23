@@ -103,6 +103,18 @@ class CashShiftController extends Controller
             ], 400);
         }
 
+        // Validate no active or unpaid orders remain
+        $activeOrders = Order::where('cash_shift_id', $cashShift->id)
+            ->whereIn('status', ['pending', 'processing', 'pending_payment'])
+            ->get();
+
+        if ($activeOrders->count() > 0) {
+            return response()->json([
+                'message'      => 'Cannot close shift: ' . $activeOrders->count() . ' active or unpaid order(s) still open. Please complete or cancel all orders before closing the shift.',
+                'active_orders' => $activeOrders->pluck('order_number'),
+            ], 400);
+        }
+
         // Calculate totals from orders
         $orders = Order::where('cash_shift_id', $cashShift->id)
             ->where('status', '!=', 'cancelled')

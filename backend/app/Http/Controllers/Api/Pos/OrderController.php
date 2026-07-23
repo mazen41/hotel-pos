@@ -401,8 +401,10 @@ class OrderController extends Controller
         
         // Get POS settings for tax and service charge
         $settings = \App\Models\PosSetting::first();
-        $taxRate = $settings?->tax_percentage ?? 0;
-        $serviceChargeRate = $settings?->service_charge_percentage ?? 0;
+
+        // Respect enabled/disabled flags — zero out if disabled
+        $taxRate = ($settings?->tax_enabled ?? true) ? ($settings?->tax_percentage ?? 0) : 0;
+        $serviceChargeRate = ($settings?->service_charge_enabled ?? false) ? ($settings?->service_charge_percentage ?? 0) : 0;
 
         $taxAmount = $subtotal * ($taxRate / 100);
         $serviceCharge = $subtotal * ($serviceChargeRate / 100);

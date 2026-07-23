@@ -7,13 +7,31 @@ import Sidebar from '@/components/layout/Sidebar';
 import Topbar from '@/components/layout/Topbar';
 import { useLocale, useTranslations } from 'next-intl';
 
-export default function DashboardShell({ children }: { children: React.ReactNode }) {
+interface DashboardShellProps {
+  children: React.ReactNode;
+  /** When true, the sidebar starts collapsed (icon-only). User can still expand it. */
+  defaultCollapsed?: boolean;
+}
+
+export default function DashboardShell({ children, defaultCollapsed = false }: DashboardShellProps) {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(defaultCollapsed);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const locale = useLocale();
   const isRtl = locale === 'ar';
   const t = useTranslations('common');
+
+  // Sync defaultCollapsed on initial mount only
+  useEffect(() => {
+    setSidebarCollapsed(defaultCollapsed);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Close mobile sidebar on route change
+  useEffect(() => {
+    setMobileSidebarOpen(false);
+  }, []);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -65,22 +83,79 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg)', direction: isRtl ? 'rtl' : 'ltr' }}>
-      <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(c => !c)} />
+      {/* Mobile sidebar overlay backdrop */}
+      {mobileSidebarOpen && (
+        <div
+          onClick={() => setMobileSidebarOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.5)',
+            zIndex: 99,
+          }}
+        />
+      )}
+
+      {/* Sidebar — always rendered; mobile slides in as overlay */}
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: isRtl ? 'auto' : 0,
+        right: isRtl ? 0 : 'auto',
+        bottom: 0,
+        zIndex: 100,
+        // On mobile: translate off-screen unless mobileSidebarOpen
+        transform: `translateX(${
+          typeof window !== 'undefined' && window.innerWidth < 1024
+            ? mobileSidebarOpen
+              ? '0'
+              : isRtl ? '100%' : '-100%'
+            : '0'
+        })`,
+        transition: 'transform 0.25s cubic-bezier(0.4,0,0.2,1)',
+      }}>
+        <Sidebar
+          collapsed={sidebarCollapsed}
+          onToggle={() => setSidebarCollapsed(c => !c)}
+        />
+      </div>
+
+      {/* Main content */}
       <div style={{
         flex: 1,
-        marginLeft: isRtl ? 0 : SIDEBAR_WIDTH,
-        marginRight: isRtl ? SIDEBAR_WIDTH : 0,
+        marginLeft: isRtl ? 0 : `max(64px, ${SIDEBAR_WIDTH})`,
+        marginRight: isRtl ? `max(64px, ${SIDEBAR_WIDTH})` : 0,
         transition: 'margin-left 0.25s cubic-bezier(0.4,0,0.2,1), margin-right 0.25s cubic-bezier(0.4,0,0.2,1)',
         display: 'flex',
         flexDirection: 'column',
         minHeight: '100vh',
+        minWidth: 0,
+        // On mobile, take full width
       }}>
-        <Topbar sidebarCollapsed={sidebarCollapsed} />
-        <main style={{ flex: 1, padding: '28px 32px', overflowY: 'auto' }}>
+        <Topbar
+          sidebarCollapsed={sidebarCollapsed}
+          onMobileMenuToggle={() => setMobileSidebarOpen(o => !o)}
+        />
+        <main style={{ flex: 1, padding: '20px 24px', overflowY: 'auto', overflowX: 'hidden' }}>
           {children}
         </main>
       </div>
+
+      <style>{`
+        @media (max-width: 1023px) {
+          /* On mobile, sidebar floats over content */
+          .sidebar-wrapper {
+            transform: translateX(-100%) !important;
+          }
+          .sidebar-wrapper.open {
+            transform: translateX(0) !important;
+          }
+          .main-content {
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
-
