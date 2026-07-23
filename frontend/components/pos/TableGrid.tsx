@@ -1,20 +1,15 @@
 'use client';
 
 import { memo, useMemo } from 'react';
-import { useTranslations } from 'next-intl';
-import { Users, Clock, DollarSign, Armchair } from 'lucide-react';
+import { Users, Clock, Banknote, Armchair } from 'lucide-react';
 import type { Table } from '@/types';
+import { formatCurrency } from '@/lib/money';
 
 interface TableGridProps {
   tables: Table[];
   loading: boolean;
   error: string | null;
   onTableSelect: (table: Table) => void;
-}
-
-function formatMoney(value: number | string) {
-  const amount = Number(value);
-  return Number.isFinite(amount) ? amount.toFixed(2) : '0.00';
 }
 
 function getStatusColor(status: Table['status']) {
@@ -28,6 +23,7 @@ function getStatusColor(status: Table['status']) {
     case 'reserved':
       return 'bg-info/10 border-info/30 text-info hover:bg-info/20';
     case 'needs_cleaning':
+    case 'disabled':
       return 'bg-text-muted/10 border-text-muted/30 text-text-muted hover:bg-text-muted/20';
     default:
       return 'bg-surface border-border text-text-primary hover:bg-surface-hover';
@@ -46,6 +42,8 @@ function getStatusLabel(status: Table['status']) {
       return 'Reserved';
     case 'needs_cleaning':
       return 'Needs Cleaning';
+    case 'disabled':
+      return 'Disabled';
     default:
       return status;
   }
@@ -57,8 +55,6 @@ export const TableGrid = memo(function TableGrid({
   error,
   onTableSelect,
 }: TableGridProps) {
-  const t = useTranslations();
-
   const stats = useMemo(() => {
     return {
       available: tables.filter((t) => t.status === 'available').length,
@@ -114,7 +110,7 @@ export const TableGrid = memo(function TableGrid({
         <div className="rounded-lg border border-accent/30 bg-accent/10 p-3">
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/20 text-accent">
-              <DollarSign className="h-4 w-4" />
+              <Banknote className="h-4 w-4" />
             </div>
             <div>
               <p className="text-xs font-medium text-accent">Pending Payment</p>
@@ -164,7 +160,7 @@ export const TableGrid = memo(function TableGrid({
                           {itemCount} items
                         </span>
                         <span className="font-semibold">
-                          ${formatMoney(orderTotal)}
+                          {formatCurrency(orderTotal)}
                         </span>
                       </div>
                     </>

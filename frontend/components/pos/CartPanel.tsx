@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { Minus, Trash2, ShoppingBag, Hotel, ChevronUp, ReceiptText, DollarSign, CreditCard, Clock } from 'lucide-react';
 import type { HotelGuest, Order, OrderItem } from '@/types';
 import { HotelIntegration } from './HotelIntegration';
+import { formatCurrency, toMoneyNumber } from '@/lib/money';
 
 interface CartPanelProps {
   order: Order | null;
@@ -14,15 +15,6 @@ interface CartPanelProps {
   onRemoveItem: (item: OrderItem) => void;
   onClearOrder: () => void;
   onCheckout: (method: 'cash' | 'card' | 'guest') => void;
-}
-
-function toMoney(value: number | string | null | undefined) {
-  const amount = Number(value ?? 0);
-  return Number.isFinite(amount) ? amount : 0;
-}
-
-function formatMoney(value: number | string | null | undefined) {
-  return toMoney(value).toFixed(2);
 }
 
 export const CartPanel = memo(function CartPanel({
@@ -42,7 +34,7 @@ export const CartPanel = memo(function CartPanel({
   // Laravel serializes camelCase relations as snake_case in JSON (order_items, not orderItems)
   const items = order?.order_items ?? order?.orderItems ?? [];
   const itemCount = useMemo(() => items.reduce((sum, item) => sum + item.quantity, 0), [items]);
-  const total = toMoney(order?.total);
+  const total = toMoneyNumber(order?.total);
 
   const handleChargeToFolio = async (guest: HotelGuest, amount: number) => {
     console.log('Charging to folio:', guest.id, amount);
@@ -120,7 +112,7 @@ export const CartPanel = memo(function CartPanel({
                         {item.menuItem?.name ?? `Item #${item.menu_item_id}`}
                       </h4>
                       <p className="mt-1 text-xs text-text-muted">
-                        ${formatMoney(item.unit_price)} each
+                        {formatCurrency(item.unit_price)} each
                       </p>
                     </div>
                     <button
@@ -156,7 +148,7 @@ export const CartPanel = memo(function CartPanel({
                       </button>
                     </div>
                     <span className="text-base font-bold text-text-accent">
-                      ${formatMoney(item.total_price)}
+                      {formatCurrency(item.total_price)}
                     </span>
                   </div>
                 </div>
@@ -170,20 +162,20 @@ export const CartPanel = memo(function CartPanel({
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-text-secondary">{t('pos.subtotal')}</span>
-            <span className="font-medium text-text-primary">${formatMoney(order?.subtotal)}</span>
+            <span className="font-medium text-text-primary">{formatCurrency(order?.subtotal)}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-text-secondary">{t('pos.tax')}</span>
-            <span className="font-medium text-text-primary">${formatMoney(order?.tax_amount)}</span>
+            <span className="font-medium text-text-primary">{formatCurrency(order?.tax_amount)}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-text-secondary">{t('pos.serviceCharge')}</span>
-            <span className="font-medium text-text-primary">${formatMoney(order?.service_charge)}</span>
+            <span className="font-medium text-text-primary">{formatCurrency(order?.service_charge)}</span>
           </div>
-          {toMoney(order?.discount_amount) > 0 && (
+          {toMoneyNumber(order?.discount_amount) > 0 && (
             <div className="flex justify-between">
               <span className="text-text-secondary">{t('pos.discount')}</span>
-              <span className="font-medium text-success">-${formatMoney(order?.discount_amount)}</span>
+              <span className="font-medium text-success">-{formatCurrency(order?.discount_amount)}</span>
             </div>
           )}
           {selectedGuest && (
@@ -197,7 +189,7 @@ export const CartPanel = memo(function CartPanel({
         <div className="mt-3 border-t border-border pt-3">
           <div className="flex items-center justify-between">
             <span className="text-lg font-bold text-text-primary">{t('pos.total')}</span>
-            <span className="text-2xl font-bold text-text-accent">${formatMoney(total)}</span>
+            <span className="text-2xl font-bold text-text-accent">{formatCurrency(total)}</span>
           </div>
         </div>
 

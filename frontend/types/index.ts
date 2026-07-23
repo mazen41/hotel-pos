@@ -134,7 +134,7 @@ export interface Table {
   number: string;
   name: string | null;
   capacity: number;
-  status: 'available' | 'occupied' | 'pending_payment' | 'reserved' | 'needs_cleaning';
+  status: 'available' | 'occupied' | 'pending_payment' | 'reserved' | 'needs_cleaning' | 'disabled';
   location: string | null;
   notes: string | null;
   created_at: string;
@@ -149,6 +149,9 @@ export interface Order {
   order_number: string;
   user_id: number;
   cash_shift_id: number | null;
+  shiftId?: number | null;
+  shiftName?: string | null;
+  shiftTaker?: string | null;
   order_type: 'dine_in' | 'takeaway' | 'room_service';
   table_number: string | null;
   guest_name: string | null;
@@ -212,10 +215,13 @@ export interface CashShift {
   id: number;
   user_id: number;
   status: 'open' | 'closed';
-  opening_cash: number;
-  expected_cash: number;
-  counted_cash: number | null;
-  variance: number | null;
+  name?: string | null;
+  shift_name?: string | null;
+  shift_taker?: string | null;
+  opening_cash: number | string;
+  expected_cash: number | string;
+  counted_cash: number | string | null;
+  variance: number | string | null;
   opened_at: string;
   closed_at: string | null;
   closing_notes: string | null;
