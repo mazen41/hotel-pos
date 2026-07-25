@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\PosSetting;
 use App\Models\InventoryAdjustment;
+use App\Models\CashShift;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -86,9 +87,10 @@ class ReturnController extends Controller
 
             $returnItems[] = [
                 'order_item_id' => $orderItem->id,
+                'menu_item_id' => $orderItem->menu_item_id,
                 'quantity' => $item['quantity'],
                 'unit_price' => $orderItem->unit_price,
-                'total_price' => $itemTotal
+                'total_amount' => $itemTotal
             ];
         }
 
@@ -111,11 +113,12 @@ class ReturnController extends Controller
 
             foreach ($returnItems as $item) {
                 OrderReturnItem::create([
-                    'return_id' => $return->id,
+                    'order_return_id' => $return->id,
                     'order_item_id' => $item['order_item_id'],
+                    'menu_item_id' => $item['menu_item_id'],
                     'quantity' => $item['quantity'],
                     'unit_price' => $item['unit_price'],
-                    'total_price' => $item['total_price']
+                    'total_amount' => $item['total_amount']
                 ]);
             }
 
@@ -237,6 +240,9 @@ class ReturnController extends Controller
      */
     private function processRefund(OrderReturn $return): void
     {
+        // Tie this refund to the original shift that created the order
+        $return->update(['cash_shift_id' => $return->order->cash_shift_id]);
+
         // Update order status if fully refunded
         $order = $return->order;
         $totalRefunded = OrderReturn::where('order_id', $order->id)

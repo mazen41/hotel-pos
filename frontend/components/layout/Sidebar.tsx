@@ -94,6 +94,7 @@ function ChevronIcon({ direction }: { direction: 'left' | 'right' }) {
 
 const NAV_ITEMS: NavItem[] = [
   { label: 'POS', labelKey: 'pos', href: '/pos', icon: <LayoutIcon /> },
+  { label: 'Tables', labelKey: 'tables', href: '/pos/tables', icon: <LayoutIcon /> },
   { label: 'Orders', labelKey: 'orders', href: '/pos/orders', icon: <ReportsIcon /> },
   { label: 'Inventory', labelKey: 'inventory', href: '/pos/inventory', icon: <SettingsIcon /> },
   { label: 'Cash Shifts', labelKey: 'cashShifts', href: '/pos/shifts', icon: <LayoutIcon /> },

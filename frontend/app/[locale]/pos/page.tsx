@@ -11,7 +11,7 @@ import { TableGrid } from '@/components/pos/TableGrid';
 import { MenuGrid } from '@/components/pos/MenuGrid';
 import { CartPanel } from '@/components/pos/CartPanel';
 import { Receipt } from '@/components/pos/Receipt';
-import { ArrowLeft, DollarSign, X, Receipt as ReceiptIcon, ShoppingCart } from 'lucide-react';
+import { ArrowLeft, DollarSign, X, Receipt as ReceiptIcon, ShoppingCart, Settings } from 'lucide-react';
 import type { CashShift, MenuItem, OrderItem, Order } from '@/types';
 import { formatCurrency, toMoneyNumber } from '@/lib/money';
 import { usePosSettings } from '@/contexts/PosSettingsContext';
@@ -64,10 +64,16 @@ export default function POSPage() {
     if (!can('pos.view') || hasLoadedData.current) return;
 
     hasLoadedData.current = true;
-    loadInitialData();
-    cashShiftsApi.getCurrent()
-      .then(({ data }) => setCurrentShift(data))
-      .catch(() => setCurrentShift(null));
+    const loadData = async () => {
+      await loadInitialData();
+      try {
+        const { data } = await cashShiftsApi.getCurrent();
+        setCurrentShift(data);
+      } catch {
+        setCurrentShift(null);
+      }
+    };
+    loadData();
   }, [can, loadInitialData]);
 
   const handleOpenShift = async (event: FormEvent<HTMLFormElement>) => {

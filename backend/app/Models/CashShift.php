@@ -20,6 +20,7 @@ class CashShift extends Model
         'closing_notes',
         'total_orders',
         'total_sales',
+        'total_refunds',
         'payment_breakdown',
     ];
 
@@ -32,6 +33,7 @@ class CashShift extends Model
         'closed_at' => 'datetime',
         'total_orders' => 'integer',
         'total_sales' => 'decimal:2',
+        'total_refunds' => 'decimal:2',
         'payment_breakdown' => 'array',
     ];
 
@@ -43,5 +45,10 @@ class CashShift extends Model
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
+    }
+
+    public function returns(): HasMany
+    {
+        return $this->hasMany(OrderReturn::class);
     }
 }

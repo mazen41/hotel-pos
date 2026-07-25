@@ -14,14 +14,16 @@ class TableSeeder extends Seeder
     {
         // Create 20 sample tables
         for ($i = 1; $i <= 20; $i++) {
-            Table::create([
-                'number' => (string) $i,
-                'name' => "Table $i",
-                'capacity' => $i <= 10 ? 4 : 6, // First 10 tables seat 4, rest seat 6
-                'status' => 'available',
-                'location' => $i <= 10 ? 'Main Hall' : 'Outdoor Area',
-                'notes' => null,
-            ]);
+            Table::firstOrCreate(
+                ['number' => (string) $i],
+                [
+                    'name' => "Table $i",
+                    'capacity' => $i <= 10 ? 4 : 6, // First 10 tables seat 4, rest seat 6
+                    'status' => 'available',
+                    'location' => $i <= 10 ? 'Main Hall' : 'Outdoor Area',
+                    'notes' => null,
+                ]
+            );
         }
     }
 }

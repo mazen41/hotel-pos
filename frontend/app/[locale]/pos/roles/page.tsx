@@ -121,7 +121,7 @@ export default function RolesPage() {
       name: role.name,
       max_discount_percent: role.max_discount_percent || 0,
       max_discount_amount: role.max_discount_amount || 0,
-      permissions: role.permissions || []
+      permissions: role.permissions?.map((p) => p.name) || []
     });
     setShowEditDialog(true);
   };
@@ -209,7 +209,7 @@ export default function RolesPage() {
                   <div className="flex justify-between text-sm">
                     <span className="text-text-secondary">{t('roles.maxDiscountAmount')}</span>
                     <span className="text-text-primary font-medium">
-                      ${role.max_discount_amount?.toFixed(2) || '0.00'}
+                      ${Number(role.max_discount_amount || 0).toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -217,10 +217,10 @@ export default function RolesPage() {
                 <div className="flex flex-wrap gap-2">
                   {role.permissions?.slice(0, 3).map((permission) => (
                     <span
-                      key={permission}
+                      key={permission.id}
                       className="px-2 py-1 rounded-full text-xs font-medium bg-surface-elevated text-text-secondary"
                     >
-                      {permission}
+                      {permission.name}
                     </span>
                   ))}
                   {(role.permissions?.length || 0) > 3 && (

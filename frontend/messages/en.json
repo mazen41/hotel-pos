@@ -83,7 +83,8 @@
     "processing": "Processing...",
     "orderCompleted": "Order completed successfully",
     "orderFailed": "Failed to process order",
-    "returns": "Returns"
+    "returns": "Returns",
+    "cartDrawerToggle": "Toggle cart"
   },
   "roles": {
     "title": "Roles & Permissions",
@@ -225,6 +226,7 @@
     "posOS": "Hotel POS",
     "hotelOS": "Hotel OS",
     "pos": "POS",
+    "tables": "Tables",
     "orders": "Orders",
     "inventory": "Inventory",
     "cashShifts": "Cash Shifts",

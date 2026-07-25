@@ -13,7 +13,7 @@ class OrderPolicy
      */
     private function isAdminOrManager(User $user): bool
     {
-        return $user->hasRole(['admin', 'manager', 'super-admin']);
+        return $user->hasRole(['Admin', 'Manager', 'Super Admin']);
     }
 
     /**
@@ -21,7 +21,7 @@ class OrderPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('pos.view') || $user->can('pos.create_orders') || $this->isAdminOrManager($user);
+        return $user->can('pos.view') || $user->can('pos.create_order') || $this->isAdminOrManager($user);
     }
 
     /**
@@ -55,7 +55,7 @@ class OrderPolicy
         }
 
         // Cashiers can only update their own orders that are not yet completed/cancelled
-        return ($user->can('pos.create_orders') || $user->can('pos.view'))
+        return ($user->can('pos.edit_orders') || $user->can('pos.create_order') || $user->can('pos.view'))
             && $order->user_id === $user->id
             && !in_array($order->status, ['completed', 'cancelled']);
     }
@@ -69,7 +69,7 @@ class OrderPolicy
             return true;
         }
 
-        return $user->can('pos.create_orders')
+        return $user->can('pos.delete_orders')
             && $order->user_id === $user->id
             && $order->status === 'pending';
     }

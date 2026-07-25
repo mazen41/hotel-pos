@@ -142,6 +142,8 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::prefix('reports')->group(function () {
+        Route::get('/generate', [PosReportController::class, 'generateReport']);
+        Route::get('/metadata', [PosReportController::class, 'metadata']);
         Route::get('/sales', [PosReportController::class, 'sales']);
         Route::get('/revenue-by-category', [PosReportController::class, 'revenueByCategory']);
         Route::get('/best-sellers', [PosReportController::class, 'bestSellers']);

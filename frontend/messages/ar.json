@@ -83,7 +83,8 @@
     "processing": "جاري المعالجة...",
     "orderCompleted": "تم إتمام الطلب بنجاح",
     "orderFailed": "فشل معالجة الطلب",
-    "returns": "المردودات"
+    "returns": "المردودات",
+    "cartDrawerToggle": "فتح السلة"
   },
   "roles": {
     "title": "الأدوار والصلاحيات",
@@ -225,6 +226,7 @@
     "posOS": "نقطة بيع الفندق",
     "hotelOS": "نظام الفندق",
     "pos": "نقطة البيع",
+    "tables": "الطاولات",
     "orders": "الطلبات",
     "inventory": "المخزون",
     "cashShifts": "ورديات النقد",

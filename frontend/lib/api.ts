@@ -509,7 +509,7 @@ export const cashShiftsApi = {
       { method: 'POST', body: JSON.stringify(data) }
     ),
 
-  close: (id: number, data: { counted_cash: number; closing_notes?: string }) =>
+  close: (id: number, data: { counted_cash: number; notes?: string }) =>
     request<{ message: string; data: import('@/types').CashShift }>(
       `/cash-shifts/${id}/close`,
       { method: 'POST', body: JSON.stringify(data) }
@@ -849,6 +849,44 @@ export const posReportsApi = {
     return request<{ data: import('@/types').RefundReport }>(
       `/reports/refunds${query ? `?${query}` : ''}`
     );
+  },
+
+  generate: (params?: {
+    type: string;
+    date_from?: string;
+    date_to?: string;
+    preset?: string;
+    user_id?: number | string;
+    cash_shift_id?: number | string;
+    menu_item_id?: number | string;
+    menu_category_id?: number | string;
+    table_number?: string;
+    payment_method_id?: number | string;
+    limit?: number;
+  }) => {
+    const queryString = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, val]) => {
+        if (val !== undefined && val !== null && val !== '') {
+          queryString.append(key, String(val));
+        }
+      });
+    }
+    const query = queryString.toString();
+    return request<{ data: any }>(`/reports/generate${query ? `?${query}` : ''}`);
+  },
+
+  metadata: () => {
+    return request<{
+      data: {
+        cashiers: Array<{ id: number; name: string }>;
+        shifts: Array<{ id: number; shift_name: string; name: string; opened_at: string; status: string; label: string }>;
+        tables: Array<{ id: number; number: string; status: string }>;
+        items: Array<{ id: number; name: string; price: number; menu_category_id: number }>;
+        categories: Array<{ id: number; name: string }>;
+        payment_methods: Array<{ id: number; name: string; code: string }>;
+      };
+    }>('/reports/metadata');
   },
 
   export: (params?: {

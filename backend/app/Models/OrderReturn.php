@@ -13,6 +13,7 @@ class OrderReturn extends Model
     protected $fillable = [
         'return_number',
         'order_id',
+        'cash_shift_id',
         'user_id',
         'approved_by',
         'status',
@@ -29,6 +30,11 @@ class OrderReturn extends Model
         'approved_at' => 'datetime',
         'rejected_at' => 'datetime',
     ];
+
+    public function cashShift(): BelongsTo
+    {
+        return $this->belongsTo(CashShift::class);
+    }
 
     public function order(): BelongsTo
     {
@@ -48,6 +54,11 @@ class OrderReturn extends Model
     public function returnItems(): HasMany
     {
         return $this->hasMany(OrderReturnItem::class);
+    }
+
+    public function items(): HasMany
+    {
+        return $this->returnItems();
     }
 
     protected static function boot()

@@ -228,6 +228,30 @@ export interface CashShift {
   total_orders: number;
   total_sales: number;
   payment_breakdown: Record<string, number> | null;
+  summary?: {
+    // Counts
+    total_orders: number;
+    // Sales
+    gross_sales: number;
+    total_tax: number;
+    total_service_charge: number;
+    total_discounts: number;
+    total_sales: number;
+    // Payment methods
+    cash_sales: number;
+    card_sales: number;
+    payment_breakdown: Record<string, number> | null;
+    // Refunds
+    total_refunds: number;
+    cash_refunds: number;
+    // Voids
+    deleted_orders_count: number;
+    deleted_orders_total: number;
+    cash_voids: number;
+    // Cash reconciliation
+    opening_cash: number;
+    expected_cash: number;
+  } | null;
   created_at: string;
   updated_at: string;
   user?: User;
@@ -343,12 +367,24 @@ export interface PosPaymentMethod {
 
 // ─── POS Roles ───────────────────────────────────────────────────────────────
 
+export interface Permission {
+  id: number;
+  name: string;
+  guard_name: string;
+  created_at?: string;
+  updated_at?: string;
+  pivot?: {
+    role_id: number;
+    permission_id: number;
+  };
+}
+
 export interface Role {
   id: number;
   name: string;
   max_discount_percent: number;
   max_discount_amount: number;
-  permissions: string[];
+  permissions: Permission[];
   created_at?: string;
   updated_at?: string;
 }
