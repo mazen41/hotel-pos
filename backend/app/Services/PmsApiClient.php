@@ -41,7 +41,9 @@ class PmsApiClient
 
     public function getReservationFolio(int $reservationId): array
     {
-        return $this->request()->get("/api/billing/folios", ['reservation_id' => $reservationId, 'status' => 'open'])->throw()->json('data', []);
+        $folio = $this->request()->get('/api/billing/folios/lookup', ['reservation_id' => $reservationId])->throw()->json('data');
+
+        return $folio ? [$folio] : [];
     }
 
     public function createFolio(int $reservationId, int $guestId): array
