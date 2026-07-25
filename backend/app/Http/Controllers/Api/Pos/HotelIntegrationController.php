@@ -104,19 +104,19 @@ class HotelIntegrationController extends Controller
     public function chargeToFolio(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'guest_id' => 'nullable|string',
-            'folio_id' => 'required|string',
+            'guest_id' => 'nullable',
+            'folio_id' => 'required',
             'amount' => 'required|numeric|min:0.01',
             'description' => 'required|string',
             'order_id' => 'nullable|integer',
         ]);
 
         return $this->handlePmsRequest(fn () => $this->pmsApiClient->postChargeToFolio(
-            $validated['folio_id'],
+            (string) $validated['folio_id'],
             (float) $validated['amount'],
             $validated['description'],
             [
-                'guest_id' => $validated['guest_id'] ?? null,
+                'guest_id' => isset($validated['guest_id']) ? (string) $validated['guest_id'] : null,
                 'reference' => isset($validated['order_id']) ? "Order #{$validated['order_id']}" : null,
             ],
         ), 'Successfully charged to guest folio');
