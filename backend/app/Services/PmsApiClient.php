@@ -25,17 +25,23 @@ class PmsApiClient
 
     public function postChargeToFolio(string $folioId, float $amount, string $description, array $metadata = []): array
     {
-        return $this->request()->post('/api/folios/charge', array_merge($metadata, [
-            'folio_id' => $folioId,
+        return $this->request()->post('/api/billing/charges', array_merge($metadata, [
+            'folio_id' => (int) $folioId,
             'amount' => $amount,
             'description' => $description,
-            'source' => 'pos',
-        ]))->throw()->json();
+            'charge_type' => 'food_beverage', // POS charges are typically food & beverage
+            'total_amount' => $amount, // PMS expects total_amount
+        ]))->throw()->json('data');
     }
 
     public function lookupGuestFolio(string $guestId): array
     {
         return $this->request()->get("/api/guests/{$guestId}/folio")->throw()->json('data', []);
+    }
+
+    public function getReservationFolio(int $reservationId): array
+    {
+        return $this->request()->get("/api/billing/folios", ['reservation_id' => $reservationId, 'status' => 'open'])->throw()->json('data', []);
     }
 
     private function request(): PendingRequest

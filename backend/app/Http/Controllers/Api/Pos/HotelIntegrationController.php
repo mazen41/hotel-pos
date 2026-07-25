@@ -49,7 +49,56 @@ class HotelIntegrationController extends Controller
     {
         $validated = $request->validate(['q' => 'required|string|min:2']);
 
-        return $this->handlePmsRequest(fn () => $this->pmsApiClient->searchGuests($validated['q']));
+        return $this->handlePmsRequest(function () use ($validated) {
+            $guests = $this->pmsApiClient->searchGuests($validated['q']);
+            
+            // Transform PMS guest data to match frontend expectations
+            $transformedGuests = [];
+            foreach ($guests as $guest) {
+                // Extract room number and folio from active reservation
+                $roomNumber = null;
+                $folioId = null;
+                
+                if (isset($guest['reservation_history']) && is_array($guest['reservation_history'])) {
+                    // Find the most recent active reservation
+                    foreach ($guest['reservation_history'] as $reservation) {
+                        if (isset($reservation['status']) && in_array($reservation['status'], ['checked_in', 'confirmed'])) {
+                            // Try to get room number from room object if available
+                            $roomNumber = $reservation['room']['room_number'] ?? $reservation['room_number'] ?? null;
+                            $reservationId = $reservation['id'] ?? null;
+                            
+                            // Fetch the actual folio for this reservation
+                            if ($reservationId) {
+                                try {
+                                    $folios = $this->pmsApiClient->getReservationFolio($reservationId);
+                                    if (!empty($folios)) {
+                                        $folioId = $folios[0]['id'] ?? $reservationId;
+                                    } else {
+                                        $folioId = $reservationId; // Fallback to reservation ID
+                                    }
+                                } catch (\Exception $e) {
+                                    // If folio fetch fails, use reservation ID as fallback
+                                    $folioId = $reservationId;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+                
+                // Only include guests with active reservations (room assigned)
+                if ($roomNumber) {
+                    $transformedGuests[] = [
+                        'id' => $guest['id'],
+                        'name' => $guest['full_name'] ?? trim(($guest['first_name'] ?? '') . ' ' . ($guest['last_name'] ?? '')),
+                        'room_number' => $roomNumber,
+                        'folio_id' => $folioId ?? $guest['id'], // Fallback to guest ID if no folio found
+                    ];
+                }
+            }
+            
+            return $transformedGuests;
+        });
     }
 
     public function chargeToFolio(Request $request): JsonResponse

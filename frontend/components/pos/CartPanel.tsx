@@ -7,6 +7,7 @@ import type { HotelGuest, Order, OrderItem } from '@/types';
 import { HotelIntegration } from './HotelIntegration';
 import { formatCurrency, toMoneyNumber } from '@/lib/money';
 import { usePosSettings } from '@/contexts/PosSettingsContext';
+import { hotelIntegrationApi } from '@/lib/api';
 
 interface CartPanelProps {
   order: Order | null;
@@ -41,9 +42,21 @@ export const CartPanel = memo(function CartPanel({
   const showServiceCharge = Boolean(settings?.service_charge_enabled) && toMoneyNumber(order?.service_charge) > 0;
 
   const handleChargeToFolio = async (guest: HotelGuest, amount: number) => {
-    console.log('Charging to folio:', guest.id, amount);
-    setSelectedGuest(guest);
-    setShowHotelIntegration(false);
+    try {
+      await hotelIntegrationApi.chargeToFolio({
+        guest_id: guest.id,
+        folio_id: guest.folio_id,
+        amount: amount,
+        description: `POS Order - ${order?.order_number}`,
+      });
+      setSelectedGuest(guest);
+      setShowHotelIntegration(false);
+      // Trigger checkout with guest payment method
+      onCheckout('guest');
+    } catch (error) {
+      console.error('Failed to charge to folio:', error);
+      throw error;
+    }
   };
 
   const handlePaymentSelect = (method: 'cash' | 'card' | 'guest') => {

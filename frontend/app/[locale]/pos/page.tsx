@@ -176,7 +176,7 @@ export default function POSPage() {
 
     try {
       if (paymentMethod === 'guest') {
-        // Mark as pending payment
+        // Mark as pending payment - guest will be charged via PMS integration
         const response = await ordersApi.update(tableOrders.activeOrder.id, {
           status: 'pending_payment',
         });
@@ -192,7 +192,7 @@ export default function POSPage() {
         );
         
         tableOrders.backToTables();
-        tableOrders.showNotice('Order saved as pending payment');
+        tableOrders.showNotice('Order charged to guest folio via PMS');
       } else {
         // Complete the order with payment
         const paymentMethodObj = pos.paymentMethods.find((pm) => pm.code === paymentMethod);
