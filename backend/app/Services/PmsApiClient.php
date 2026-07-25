@@ -44,6 +44,14 @@ class PmsApiClient
         return $this->request()->get("/api/billing/folios", ['reservation_id' => $reservationId, 'status' => 'open'])->throw()->json('data', []);
     }
 
+    public function createFolio(int $reservationId, int $guestId): array
+    {
+        return $this->request()->post('/api/billing/folios', [
+            'reservation_id' => $reservationId,
+            'guest_id' => $guestId,
+        ])->throw()->json('data', []);
+    }
+
     private function request(): PendingRequest
     {
         $settings = $this->settings ?? HotelIntegrationSetting::getSettings();

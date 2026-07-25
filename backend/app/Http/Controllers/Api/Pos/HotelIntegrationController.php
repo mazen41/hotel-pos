@@ -67,18 +67,23 @@ class HotelIntegrationController extends Controller
                             $roomNumber = $reservation['room']['room_number'] ?? $reservation['room_number'] ?? null;
                             $reservationId = $reservation['id'] ?? null;
                             
-                            // Fetch the actual folio for this reservation
+                            // Fetch the actual open folio for this reservation, creating one if none exists yet
                             if ($reservationId) {
                                 try {
                                     $folios = $this->pmsApiClient->getReservationFolio($reservationId);
                                     if (!empty($folios)) {
-                                        $folioId = $folios[0]['id'] ?? $reservationId;
-                                    } else {
-                                        $folioId = $reservationId; // Fallback to reservation ID
+                                        $folioId = $folios[0]['id'] ?? null;
+                                    }
+                                    if (!$folioId) {
+                                        $newFolio = $this->pmsApiClient->createFolio($reservationId, (int) $guest['id']);
+                                        $folioId = $newFolio['id'] ?? null;
                                     }
                                 } catch (\Exception $e) {
-                                    // If folio fetch fails, use reservation ID as fallback
-                                    $folioId = $reservationId;
+                                    Log::warning('Failed to resolve/create PMS folio for reservation', [
+                                        'reservation_id' => $reservationId,
+                                        'error' => $e->getMessage(),
+                                    ]);
+                                    $folioId = null;
                                 }
                             }
                             break;
@@ -86,13 +91,13 @@ class HotelIntegrationController extends Controller
                     }
                 }
                 
-                // Only include guests with active reservations (room assigned)
-                if ($roomNumber) {
+                // Only include guests with an active reservation, a room assigned, and a real folio to charge
+                if ($roomNumber && $folioId) {
                     $transformedGuests[] = [
                         'id' => $guest['id'],
                         'name' => $guest['full_name'] ?? trim(($guest['first_name'] ?? '') . ' ' . ($guest['last_name'] ?? '')),
                         'room_number' => $roomNumber,
-                        'folio_id' => $folioId ?? $guest['id'], // Fallback to guest ID if no folio found
+                        'folio_id' => $folioId,
                     ];
                 }
             }
