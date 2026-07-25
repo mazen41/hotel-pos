@@ -5,7 +5,7 @@
  * Automatically attaches Sanctum bearer tokens from localStorage.
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'https://hotel-sys.loop-pr.com/api';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'https://hotel-pos.nazstudio.art/api';
 
 export class ApiError extends Error {
   status: number;
