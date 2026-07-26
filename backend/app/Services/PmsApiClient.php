@@ -48,7 +48,7 @@ class PmsApiClient
 
     public function createFolio(int $reservationId, int $guestId): array
     {
-        return $this->request()->post('/api/billing/folios', [
+        return $this->request()->post('/api/billing/folios/open', [
             'reservation_id' => $reservationId,
             'guest_id' => $guestId,
         ])->throw()->json('data', []);
