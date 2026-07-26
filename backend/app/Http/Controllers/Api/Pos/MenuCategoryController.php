@@ -36,10 +36,13 @@ class MenuCategoryController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'sort_order' => 'integer|default:0',
-            'is_active' => 'boolean|default:true',
+            'sort_order' => 'nullable|integer',
+            'is_active' => 'nullable|boolean',
             'image_url' => 'nullable|url',
         ]);
+
+        $validated['sort_order'] = isset($validated['sort_order']) ? (int) $validated['sort_order'] : 0;
+        $validated['is_active'] = isset($validated['is_active']) ? (bool) $validated['is_active'] : true;
 
         $category = MenuCategory::create($validated);
         
