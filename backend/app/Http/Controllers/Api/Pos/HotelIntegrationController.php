@@ -51,57 +51,38 @@ class HotelIntegrationController extends Controller
 
         return $this->handlePmsRequest(function () use ($validated) {
             $guests = $this->pmsApiClient->searchGuests($validated['q']);
-            
-            // Transform PMS guest data to match frontend expectations
+
+            // Transform PMS guest data to match frontend expectations.
+            // Note: we deliberately do NOT resolve or create a folio here — a
+            // reservation may legitimately have no folio yet (nothing has been
+            // charged/paid). Folio resolution/creation happens at charge time
+            // in chargeToFolio(), not at search time.
             $transformedGuests = [];
             foreach ($guests as $guest) {
-                // Extract room number and folio from active reservation
                 $roomNumber = null;
-                $folioId = null;
-                
+                $reservationId = null;
+
                 if (isset($guest['reservation_history']) && is_array($guest['reservation_history'])) {
-                    // Find the most recent active reservation
                     foreach ($guest['reservation_history'] as $reservation) {
                         if (isset($reservation['status']) && in_array($reservation['status'], ['checked_in', 'confirmed'])) {
-                            // Try to get room number from room object if available
                             $roomNumber = $reservation['room']['room_number'] ?? $reservation['room_number'] ?? null;
                             $reservationId = $reservation['id'] ?? null;
-                            
-                            // Fetch the actual open folio for this reservation, creating one if none exists yet
-                            if ($reservationId) {
-                                try {
-                                    $folios = $this->pmsApiClient->getReservationFolio($reservationId);
-                                    if (!empty($folios)) {
-                                        $folioId = $folios[0]['id'] ?? null;
-                                    }
-                                    if (!$folioId) {
-                                        $newFolio = $this->pmsApiClient->createFolio($reservationId, (int) $guest['id']);
-                                        $folioId = $newFolio['id'] ?? null;
-                                    }
-                                } catch (\Exception $e) {
-                                    Log::warning('Failed to resolve/create PMS folio for reservation', [
-                                        'reservation_id' => $reservationId,
-                                        'error' => $e->getMessage(),
-                                    ]);
-                                    $folioId = null;
-                                }
-                            }
                             break;
                         }
                     }
                 }
-                
-                // Only include guests with an active reservation, a room assigned, and a real folio to charge
-                if ($roomNumber && $folioId) {
+
+                // Only include guests with an active reservation and a room assigned
+                if ($roomNumber && $reservationId) {
                     $transformedGuests[] = [
                         'id' => $guest['id'],
                         'name' => $guest['full_name'] ?? trim(($guest['first_name'] ?? '') . ' ' . ($guest['last_name'] ?? '')),
                         'room_number' => $roomNumber,
-                        'folio_id' => $folioId,
+                        'reservation_id' => $reservationId,
                     ];
                 }
             }
-            
+
             return $transformedGuests;
         });
     }
@@ -110,21 +91,41 @@ class HotelIntegrationController extends Controller
     {
         $validated = $request->validate([
             'guest_id' => 'nullable',
-            'folio_id' => 'required',
+            'reservation_id' => 'required',
             'amount' => 'required|numeric|min:0.01',
             'description' => 'required|string',
             'order_id' => 'nullable|integer',
         ]);
 
-        return $this->handlePmsRequest(fn () => $this->pmsApiClient->postChargeToFolio(
-            (string) $validated['folio_id'],
-            (float) $validated['amount'],
-            $validated['description'],
-            [
-                'guest_id' => isset($validated['guest_id']) ? (string) $validated['guest_id'] : null,
-                'reference' => isset($validated['order_id']) ? "Order #{$validated['order_id']}" : null,
-            ],
-        ), 'Successfully charged to guest folio');
+        return $this->handlePmsRequest(function () use ($validated) {
+            $reservationId = (int) $validated['reservation_id'];
+
+            // Resolve the reservation's open folio, creating one on the fly
+            // if this is the first charge against it.
+            $folioId = null;
+            $folios = $this->pmsApiClient->getReservationFolio($reservationId);
+            if (!empty($folios)) {
+                $folioId = $folios[0]['id'] ?? null;
+            }
+            if (!$folioId) {
+                $newFolio = $this->pmsApiClient->createFolio($reservationId, (int) ($validated['guest_id'] ?? 0));
+                $folioId = $newFolio['id'] ?? null;
+            }
+
+            if (!$folioId) {
+                throw new RuntimeException('Could not resolve or create a folio for this reservation.');
+            }
+
+            return $this->pmsApiClient->postChargeToFolio(
+                (string) $folioId,
+                (float) $validated['amount'],
+                $validated['description'],
+                [
+                    'guest_id' => isset($validated['guest_id']) ? (string) $validated['guest_id'] : null,
+                    'reference' => isset($validated['order_id']) ? "Order #{$validated['order_id']}" : null,
+                ],
+            );
+        }, 'Successfully charged to guest folio');
     }
 
     private function handlePmsRequest(callable $callback, string $message = null): JsonResponse
