@@ -25,7 +25,7 @@ class PmsApiClient
 
     public function postChargeToFolio(string $folioId, float $amount, string $description, array $metadata = []): array
     {
-        return $this->request()->post('/api/billing/charges', array_merge($metadata, [
+        return $this->request()->post('/api/billing/charges/post', array_merge($metadata, [
             'folio_id' => (int) $folioId,
             'amount' => $amount,
             'description' => $description,
