@@ -109,7 +109,7 @@ export default function POSPage() {
       // Update tables list to reflect new order
       pos.setTables((prev) => 
         prev.map((t) => 
-          t.id === table.id ? { ...t, activeOrder: order } : t
+          t.id === table.id ? { ...t, activeOrder: order ?? undefined } : t
         )
       );
     } catch (error) {
@@ -122,7 +122,7 @@ export default function POSPage() {
   };
 
   const handleItemClick = async (item: MenuItem) => {
-    if (!tableOrders.activeOrder || !tableOrders.selectedTable) return;
+    if (!tableOrders.selectedTable) return;
 
     try {
       await tableOrders.addItemToOrder(item, tableOrders.activeOrder, tableOrders.selectedTable);

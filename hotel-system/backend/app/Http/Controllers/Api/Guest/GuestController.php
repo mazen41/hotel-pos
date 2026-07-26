@@ -144,6 +144,11 @@ class GuestController extends Controller
     {
         $guests = Guest::query()
             ->withCount('reservations')
+            ->with(['reservations' => function ($query) {
+                $query->with('room')
+                    ->whereIn('status', ['checked_in', 'confirmed'])
+                    ->orderByDesc('check_in_date');
+            }])
             ->search($request->validated('q'))
             ->orderBy('last_name')
             ->orderBy('first_name')

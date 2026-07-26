@@ -23,6 +23,7 @@ class ReservationSummaryResource extends JsonResource
             'source' => $this->source,
             'total_amount' => $this->total_amount,
             'balance_due' => $this->balance_due,
+            'room_number' => $this->whenLoaded('room', fn () => $this->room?->room_number),
         ];
     }
 }

@@ -40,6 +40,17 @@ Route::prefix('auth')->group(function () {
     Route::post('/login',    [AuthController::class, 'login']);
 });
 
+// ─── POS Integration Routes (Public for internal integration) ─────────────────
+Route::prefix('guests')->group(function () {
+    Route::get('/search', [GuestController::class, 'search']);
+});
+
+Route::prefix('billing')->group(function () {
+    Route::post('/charges/post', [ChargeController::class, 'store']);
+    Route::get('/folios/lookup', [FolioController::class, 'lookupOpenForReservation']);
+    Route::post('/folios/open', [FolioController::class, 'store']);
+});
+
 // ─── Protected Routes (Sanctum) ───────────────────────────────────────────────
 Route::middleware('auth:sanctum')->group(function () {
 
@@ -76,7 +87,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Guests
     Route::prefix('guests')->group(function () {
-        Route::get('/search',  [GuestController::class, 'search']); // must be before /{guest}
         Route::get('/',        [GuestController::class, 'index']);
         Route::post('/',       [GuestController::class, 'store']);
         Route::get('/{guest}', [GuestController::class, 'show']);

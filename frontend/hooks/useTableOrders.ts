@@ -13,46 +13,50 @@ export function useTableOrders() {
   const [notice, setNotice] = useState<string | null>(null);
 
   const selectTable = useCallback(async (table: Table) => {
-    setLoadingOrder(true);
     setError(null);
 
-    try {
-      // Check if we already have this table's order in memory
-      if (tableOrders.has(table.id)) {
-        const existingOrder = tableOrders.get(table.id)!;
-        setActiveOrderState(existingOrder);
-        setSelectedTable(table);
-        setLoadingOrder(false);
-        return { order: existingOrder, table };
-      }
-
-      // Get or create order for this table
-      const response = await tablesApi.getOrCreateOrder(table.id);
-      const order = response.data;
-      
-      // Store in memory
-      setTableOrders((prev) => new Map(prev).set(table.id, order));
-      setActiveOrderState(order);
+    // Check if we already have this table's order in memory
+    if (tableOrders.has(table.id)) {
+      const existingOrder = tableOrders.get(table.id)!;
+      setActiveOrderState(existingOrder);
       setSelectedTable(table);
-      
-      return { order, table };
-    } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'Could not open table.');
-      throw caught;
-    } finally {
-      setLoadingOrder(false);
+      return { order: existingOrder, table };
     }
+
+    // Table already has a persisted order (e.g. loaded from the tables list) —
+    // use it as-is. Otherwise, don't create anything yet: opening a table should
+    // not mark it occupied or create a pending order until an item is actually
+    // added. The order gets created lazily in addItemToOrder().
+    const order = table.activeOrder ?? null;
+
+    if (order) {
+      setTableOrders((prev) => new Map(prev).set(table.id, order));
+    }
+    setActiveOrderState(order);
+    setSelectedTable(table);
+
+    return { order, table };
   }, [tableOrders]);
 
-  const addItemToOrder = useCallback(async (item: MenuItem, order: Order, table: Table) => {
+  const addItemToOrder = useCallback(async (item: MenuItem, order: Order | null, table: Table) => {
     setBusyItemId(item.id);
     setError(null);
 
     try {
-      const existingItem = order.order_items?.find((orderItem) => orderItem.menu_item_id === item.id);
+      // No persisted order yet for this table — create it now, on the first
+      // item added. This is what actually marks the table occupied.
+      let workingOrder = order;
+      if (!workingOrder) {
+        const created = await tablesApi.getOrCreateOrder(table.id);
+        workingOrder = created.data;
+        setTableOrders((prev) => new Map(prev).set(table.id, workingOrder as Order));
+        setActiveOrderState(workingOrder);
+      }
+
+      const existingItem = workingOrder.order_items?.find((orderItem) => orderItem.menu_item_id === item.id);
 
       if (existingItem) {
-        const response = await ordersApi.updateItem(order.id, existingItem.id, {
+        const response = await ordersApi.updateItem(workingOrder.id, existingItem.id, {
           quantity: existingItem.quantity + 1,
         });
         const updatedOrder = response.data;
@@ -60,7 +64,7 @@ export function useTableOrders() {
         setTableOrders((prev) => new Map(prev).set(table.id, updatedOrder));
         return updatedOrder;
       } else {
-        const response = await ordersApi.addItem(order.id, {
+        const response = await ordersApi.addItem(workingOrder.id, {
           menu_item_id: item.id,
           quantity: 1,
         });

@@ -459,5 +459,5 @@ export interface HotelGuest {
   id: number;
   name: string;
   room_number: string;
-  folio_id: string;
+  reservation_id: number;
 }

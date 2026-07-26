@@ -92,11 +92,20 @@ function ChevronIcon({ direction }: { direction: 'left' | 'right' }) {
   );
 }
 
+function MenuIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+      <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
 const NAV_ITEMS: NavItem[] = [
   { label: 'POS', labelKey: 'pos', href: '/pos', icon: <LayoutIcon /> },
   { label: 'Tables', labelKey: 'tables', href: '/pos/tables', icon: <LayoutIcon /> },
   { label: 'Orders', labelKey: 'orders', href: '/pos/orders', icon: <ReportsIcon /> },
   { label: 'Inventory', labelKey: 'inventory', href: '/pos/inventory', icon: <SettingsIcon /> },
+  { label: 'Menu Setup', labelKey: 'menuSetup', href: '/pos/menu', icon: <MenuIcon /> },
   { label: 'Cash Shifts', labelKey: 'cashShifts', href: '/pos/shifts', icon: <LayoutIcon /> },
   { label: 'Returns', labelKey: 'returns', href: '/pos/returns', icon: <ReportsIcon /> },
   { label: 'Reports', labelKey: 'reports', href: '/pos/reports', icon: <ReportsIcon /> },

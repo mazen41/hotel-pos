@@ -909,13 +909,13 @@ export const posReportsApi = {
 
 export const hotelIntegrationApi = {
   searchGuest: (query: string) =>
-    request<{ data: Array<{ id: number; name: string; room_number: string; folio_id: string }> }>(
+    request<{ data: Array<{ id: number; name: string; room_number: string; reservation_id: number }> }>(
       `/hotel-integration/guests/search?q=${encodeURIComponent(query)}`
     ),
 
   chargeToFolio: (data: {
     guest_id: number;
-    folio_id: string;
+    reservation_id: number;
     amount: number;
     description: string;
   }) =>

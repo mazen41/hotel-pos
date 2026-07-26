@@ -24,7 +24,7 @@ export function HotelIntegration({ onGuestSelect, chargeToFolio, orderTotal }: H
 
   // Debounced search function
   const handleSearch = useCallback(async (query: string) => {
-    if (!query.trim() || query.length < 2) {
+    if (!query || !query.trim() || query.length < 2) {
       setSearchResults([]);
       return;
     }
@@ -33,10 +33,11 @@ export function HotelIntegration({ onGuestSelect, chargeToFolio, orderTotal }: H
     setError(null);
     try {
       const { data } = await hotelIntegrationApi.searchGuest(query);
-      setSearchResults(data);
+      setSearchResults(data || []);
     } catch (err) {
       setError('Failed to search guests');
       console.error('Search error:', err);
+      setSearchResults([]);
     } finally {
       setLoading(false);
     }
@@ -144,7 +145,7 @@ export function HotelIntegration({ onGuestSelect, chargeToFolio, orderTotal }: H
               <div>
                 <p className="font-medium text-text-primary">{selectedGuest.name}</p>
                 <p className="text-sm text-text-muted">
-                  Room {selectedGuest.room_number} • Folio: {selectedGuest.folio_id}
+                  Room {selectedGuest.room_number} • Reservation #{selectedGuest.reservation_id}
                 </p>
               </div>
             </div>

@@ -45,7 +45,7 @@ export const CartPanel = memo(function CartPanel({
     try {
       await hotelIntegrationApi.chargeToFolio({
         guest_id: guest.id,
-        folio_id: guest.folio_id,
+        reservation_id: guest.reservation_id,
         amount: amount,
         description: `POS Order - ${order?.order_number}`,
       });

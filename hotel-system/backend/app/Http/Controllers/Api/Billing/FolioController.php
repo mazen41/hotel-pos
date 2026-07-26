@@ -77,6 +77,28 @@ class FolioController extends Controller
     }
 
     /**
+     * GET /api/billing/folios/lookup?reservation_id=
+     *
+     * Public integration endpoint (used by the POS): returns the single open
+     * folio for a reservation, without exposing the full admin listing.
+     */
+    public function lookupOpenForReservation(Request $request): JsonResponse
+    {
+        $request->validate([
+            'reservation_id' => ['required', 'integer', 'exists:reservations,id'],
+        ]);
+
+        $folio = Folio::query()
+            ->where('reservation_id', $request->integer('reservation_id'))
+            ->where('status', 'open')
+            ->first();
+
+        return response()->json([
+            'data' => $folio ? ['id' => $folio->id, 'folio_number' => $folio->folio_number] : null,
+        ]);
+    }
+
+    /**
      * POST /api/billing/folios
      */
     public function store(StoreFolioRequest $request): JsonResponse
