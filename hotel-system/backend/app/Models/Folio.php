@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 
 class Folio extends Model
 {
@@ -91,6 +92,20 @@ class Folio extends Model
         $this->paid_amount = $this->payments()->where('status', 'completed')->sum('amount');
         $this->balance_due = $this->total_amount - $this->paid_amount;
         $this->save();
+
+        // Sync totals back to reservation
+        $this->syncToReservation();
+    }
+
+    public function syncToReservation()
+    {
+        if ($this->reservation) {
+            $this->reservation->update([
+                'paid_amount' => $this->paid_amount,
+                'balance_due' => $this->balance_due,
+                'payment_status' => $this->balance_due <= 0 ? 'paid' : ($this->paid_amount > 0 ? 'partially_paid' : 'unpaid'),
+            ]);
+        }
     }
 
     public function close()
@@ -107,7 +122,8 @@ class Folio extends Model
 
         static::creating(function ($folio) {
             if (!$folio->folio_number) {
-                $folio->folio_number = 'FOL-' . str_pad(static::max('id') + 1, 6, '0', STR_PAD_LEFT);
+                $maxId = DB::table('folios')->lockForUpdate()->max('id') ?? 0;
+                $folio->folio_number = 'FOL-' . str_pad($maxId + 1, 6, '0', STR_PAD_LEFT);
             }
         });
     }

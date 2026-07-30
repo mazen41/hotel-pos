@@ -7,11 +7,14 @@ use App\Http\Requests\Reservation\SearchReservationRequest;
 use App\Http\Requests\Reservation\StoreReservationRequest;
 use App\Http\Requests\Reservation\UpdateReservationRequest;
 use App\Http\Resources\ReservationResource;
+use App\Models\Charge;
+use App\Models\Folio;
 use App\Models\Reservation;
 use App\Services\Reservations\ReservationService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ReservationController extends Controller
 {
@@ -147,8 +150,29 @@ class ReservationController extends Controller
             ], 409);
         }
 
-        $reservation->status = 'checked_in';
-        $reservation->save();
+        DB::transaction(function () use ($reservation) {
+            $reservation->status = 'checked_in';
+            $reservation->save();
+
+            // Auto-create folio on check-in
+            if (!$reservation->folios()->exists()) {
+                Folio::create([
+                    'reservation_id' => $reservation->id,
+                    'guest_id' => $reservation->guest_id,
+                    'status' => 'open',
+                    'created_by' => auth()->id(),
+                ]);
+            }
+
+            // Set room to occupied
+            if ($reservation->room_id) {
+                $room = $reservation->room;
+                if ($room) {
+                    $room->status = 'occupied';
+                    $room->save();
+                }
+            }
+        });
 
         return response()->json([
             'message' => 'Guest checked in successfully.',
@@ -167,8 +191,37 @@ class ReservationController extends Controller
             ], 409);
         }
 
-        $reservation->status = 'checked_out';
-        $reservation->save();
+        // Check for outstanding balance
+        $folio = $reservation->folios()->open()->first();
+        if ($folio && $folio->balance_due > 0) {
+            return response()->json([
+                'message' => 'Cannot check out with outstanding balance. Please settle the folio first.',
+                'balance_due' => $folio->balance_due,
+            ], 409);
+        }
+
+        DB::transaction(function () use ($reservation) {
+            $reservation->status = 'checked_out';
+            $reservation->save();
+
+            // Update room status to cleaning
+            if ($reservation->room_id) {
+                $room = $reservation->room;
+                if ($room) {
+                    $room->status = 'cleaning';
+                    $room->save();
+                }
+            }
+
+            // Close the folio if it exists
+            $folio = $reservation->folios()->open()->first();
+            if ($folio) {
+                $folio->close();
+            }
+
+            // Sync guest stay totals
+            $this->reservations->syncGuestStayTotals($reservation->guest_id);
+        });
 
         return response()->json([
             'message' => 'Guest checked out successfully.',
@@ -213,11 +266,46 @@ class ReservationController extends Controller
             ], 409);
         }
 
-        $reservation->status = 'no_show';
-        $reservation->save();
+        DB::transaction(function () use ($reservation) {
+            $reservation->status = 'no_show';
+            $reservation->save();
+
+            // Create a folio if it doesn't exist
+            $folio = $reservation->folios()->open()->first();
+            if (!$folio) {
+                $folio = Folio::create([
+                    'reservation_id' => $reservation->id,
+                    'guest_id' => $reservation->guest_id,
+                    'status' => 'open',
+                    'created_by' => auth()->id(),
+                ]);
+            }
+
+            // Add one-night penalty charge
+            Charge::create([
+                'folio_id' => $folio->id,
+                'reservation_id' => $reservation->id,
+                'charge_type' => 'room',
+                'description' => 'No-show penalty charge (one night)',
+                'amount' => $reservation->subtotal / max($reservation->nights, 1),
+                'tax_amount' => $reservation->taxes / max($reservation->nights, 1),
+                'total_amount' => ($reservation->subtotal + $reservation->taxes) / max($reservation->nights, 1),
+                'charged_at' => now(),
+                'created_by' => auth()->id(),
+            ]);
+
+            // Release the room if assigned
+            if ($reservation->room_id) {
+                $room = $reservation->room;
+                if ($room) {
+                    $room->status = 'available';
+                    $room->save();
+                }
+            }
+        });
 
         return response()->json([
-            'message' => 'Reservation marked as no-show successfully.',
+            'message' => 'Reservation marked as no-show successfully. Penalty charge applied.',
             'data' => new ReservationResource($reservation->load(['guest', 'room.roomType', 'roomType', 'ratePlan'])),
         ]);
     }
@@ -233,22 +321,34 @@ class ReservationController extends Controller
             ], 409);
         }
 
-        // Auto-assign room if not assigned
-        if (!$reservation->room_id && $reservation->room_type_id) {
-            $availableRoom = \App\Models\Room::where('room_type_id', $reservation->room_type_id)
-                ->where('status', 'available')
-                ->where('is_active', true)
-                ->first();
+        DB::transaction(function () use ($reservation) {
+            // Auto-assign room if not assigned
+            if (!$reservation->room_id && $reservation->room_type_id) {
+                $availableRoom = \App\Models\Room::where('room_type_id', $reservation->room_type_id)
+                    ->where('status', 'available')
+                    ->where('is_active', true)
+                    ->first();
 
-            if ($availableRoom) {
-                $reservation->room_id = $availableRoom->id;
-                $availableRoom->status = 'occupied';
-                $availableRoom->save();
+                if ($availableRoom) {
+                    $reservation->room_id = $availableRoom->id;
+                    $availableRoom->status = 'occupied';
+                    $availableRoom->save();
+                }
             }
-        }
 
-        $reservation->status = 'checked_in';
-        $reservation->save();
+            $reservation->status = 'checked_in';
+            $reservation->save();
+
+            // Auto-create folio on check-in
+            if (!$reservation->folios()->exists()) {
+                Folio::create([
+                    'reservation_id' => $reservation->id,
+                    'guest_id' => $reservation->guest_id,
+                    'status' => 'open',
+                    'created_by' => auth()->id(),
+                ]);
+            }
+        });
 
         return response()->json([
             'message' => 'Express check-in completed successfully.',
@@ -267,17 +367,37 @@ class ReservationController extends Controller
             ], 409);
         }
 
-        $reservation->status = 'checked_out';
-        $reservation->save();
-
-        // Update room status
-        if ($reservation->room_id) {
-            $room = $reservation->room;
-            if ($room) {
-                $room->status = 'cleaning';
-                $room->save();
-            }
+        // Check for outstanding balance
+        $folio = $reservation->folios()->open()->first();
+        if ($folio && $folio->balance_due > 0) {
+            return response()->json([
+                'message' => 'Cannot check out with outstanding balance. Please settle the folio first.',
+                'balance_due' => $folio->balance_due,
+            ], 409);
         }
+
+        DB::transaction(function () use ($reservation) {
+            $reservation->status = 'checked_out';
+            $reservation->save();
+
+            // Update room status
+            if ($reservation->room_id) {
+                $room = $reservation->room;
+                if ($room) {
+                    $room->status = 'cleaning';
+                    $room->save();
+                }
+            }
+
+            // Close the folio if it exists
+            $folio = $reservation->folios()->open()->first();
+            if ($folio) {
+                $folio->close();
+            }
+
+            // Sync guest stay totals
+            $this->reservations->syncGuestStayTotals($reservation->guest_id);
+        });
 
         return response()->json([
             'message' => 'Express check-out completed successfully.',
@@ -303,7 +423,7 @@ class ReservationController extends Controller
         ]);
 
         // Create new reservation with same details but different room
-        $newReservation = $reservation->replicate(['reservation_number', 'room_id']);
+        $newReservation = $reservation->replicate(['reservation_number', 'room_id', 'subtotal', 'total_amount', 'paid_amount', 'balance_due']);
         $newReservation->reservation_number = $this->generateReservationNumber();
         $newReservation->room_id = $validated['room_id'];
         $newReservation->adults = $validated['adults'] ?? $reservation->adults;
@@ -316,6 +436,25 @@ class ReservationController extends Controller
             $reservation->save();
         }
         $newReservation->group_id = $reservation->group_id;
+        
+        // Recalculate totals for the new reservation
+        $totals = $this->reservations->calculateTotals(
+            $newReservation->room_type_id,
+            $newReservation->check_in_date,
+            $newReservation->check_out_date,
+            $newReservation->taxes,
+            $newReservation->fees,
+            0, // Start with 0 paid amount for the new reservation
+            $newReservation->rate_plan_id,
+            $newReservation->rate_plan_applied_amount
+        );
+        
+        $newReservation->nights = $totals['nights'];
+        $newReservation->subtotal = $totals['subtotal'];
+        $newReservation->total_amount = $totals['totalAmount'];
+        $newReservation->paid_amount = 0;
+        $newReservation->balance_due = $totals['balanceDue'];
+        $newReservation->payment_status = 'unpaid';
         
         $newReservation->save();
 

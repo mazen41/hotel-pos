@@ -16,7 +16,7 @@ class UpdateChargeRequest extends FormRequest
     {
         return [
             'folio_id' => ['sometimes', 'integer', 'exists:folios,id'],
-            'reservation_id' => ['nullable', 'integer', 'exists:reservations,id'],
+            'reservation_id' => ['required_if:charge_type,room', 'nullable', 'integer', 'exists:reservations,id'],
             'charge_type' => ['sometimes', Rule::in(['room', 'food_beverage', 'service', 'amenity', 'phone', 'laundry', 'other'])],
             'description' => ['sometimes', 'string', 'max:500'],
             'amount' => ['sometimes', 'numeric', 'min:0'],

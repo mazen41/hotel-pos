@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'pos' => [
+        'api_key' => env('POS_API_KEY', 'your-default-pos-api-key'),
+    ],
+
 ];

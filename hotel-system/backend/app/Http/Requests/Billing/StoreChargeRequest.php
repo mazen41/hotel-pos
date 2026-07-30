@@ -16,7 +16,7 @@ class StoreChargeRequest extends FormRequest
     {
         return [
             'folio_id' => ['required', 'integer', 'exists:folios,id'],
-            'reservation_id' => ['nullable', 'integer', 'exists:reservations,id'],
+            'reservation_id' => ['required_if:charge_type,room', 'nullable', 'integer', 'exists:reservations,id'],
             'charge_type' => ['required', Rule::in(['room', 'food_beverage', 'service', 'amenity', 'phone', 'laundry', 'other'])],
             'description' => ['required', 'string', 'max:500'],
             'amount' => ['required', 'numeric', 'min:0'],

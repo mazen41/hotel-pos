@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 
 class Payment extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'folio_id',
@@ -68,7 +70,8 @@ class Payment extends Model
                 $payment->payment_date = now();
             }
             if (!$payment->payment_number) {
-                $payment->payment_number = 'PAY-' . str_pad(static::max('id') + 1, 6, '0', STR_PAD_LEFT);
+                $maxId = DB::table('payments')->lockForUpdate()->max('id') ?? 0;
+                $payment->payment_number = 'PAY-' . str_pad($maxId + 1, 6, '0', STR_PAD_LEFT);
             }
         });
 

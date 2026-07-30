@@ -76,10 +76,17 @@ class ReservationService
         }
     }
 
-    public function calculateTotals(int $roomTypeId, string $checkInDate, string $checkOutDate, float $taxes = 0, float $fees = 0, float $paidAmount = 0): array
+    public function calculateTotals(int $roomTypeId, string $checkInDate, string $checkOutDate, float $taxes = 0, float $fees = 0, float $paidAmount = 0, ?int $ratePlanId = null, ?float $ratePlanAppliedAmount = null): array
     {
         $roomType = RoomType::query()->find($roomTypeId);
-        $rate = (float) ($roomType?->base_price ?? 0);
+        
+        // Use rate plan price if provided, otherwise use base price
+        if ($ratePlanId && $ratePlanAppliedAmount) {
+            $rate = $ratePlanAppliedAmount;
+        } else {
+            $rate = (float) ($roomType?->base_price ?? 0);
+        }
+        
         $nights = $this->calculateNights($checkInDate, $checkOutDate);
         $subtotal = round($rate * $nights, 2);
         $totalAmount = round($subtotal + $taxes + $fees, 2);
@@ -100,7 +107,17 @@ class ReservationService
         $data['fees'] = (float) ($data['fees'] ?? 0);
         $data['paid_amount'] = (float) ($data['paid_amount'] ?? 0);
 
-        $totals = $this->calculateTotals((int) $data['room_type_id'], $data['check_in_date'], $data['check_out_date'], $data['taxes'], $data['fees'], $data['paid_amount']);
+        $totals = $this->calculateTotals(
+            (int) $data['room_type_id'], 
+            $data['check_in_date'], 
+            $data['check_out_date'], 
+            $data['taxes'], 
+            $data['fees'], 
+            $data['paid_amount'],
+            $data['rate_plan_id'] ?? null,
+            $data['rate_plan_applied_amount'] ?? null
+        );
+        
         $data['nights'] = $totals['nights'];
         $data['subtotal'] = $totals['subtotal'];
         $data['taxes'] = $totals['taxes'];
@@ -147,7 +164,7 @@ class ReservationService
         }
     }
 
-    private function syncGuestStayTotals(int $guestId): void
+    public function syncGuestStayTotals(int $guestId): void
     {
         $totals = Reservation::query()
             ->where('guest_id', $guestId)

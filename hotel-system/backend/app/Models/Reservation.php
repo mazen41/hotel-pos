@@ -110,6 +110,11 @@ class Reservation extends Model
         return $this->hasMany(Reservation::class, 'group_id');
     }
 
+    public function folios(): HasMany
+    {
+        return $this->hasMany(Folio::class);
+    }
+
     public function scopeActive(Builder $query): Builder
     {
         return $query->whereIn('status', self::ACTIVE_STATUSES);

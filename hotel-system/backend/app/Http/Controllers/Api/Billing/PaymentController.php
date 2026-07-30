@@ -170,13 +170,24 @@ class PaymentController extends Controller
             ], 409);
         }
 
-        $payment->update([
-            'status' => 'refunded',
+        // Create a refund payment (negative amount) instead of mutating the original
+        $refundPayment = Payment::create([
+            'folio_id' => $payment->folio_id,
+            'reservation_id' => $payment->reservation_id,
+            'payment_method' => $payment->payment_method,
+            'card_last_four' => $payment->card_last_four,
+            'card_type' => $payment->card_type,
+            'transaction_id' => 'REF-' . ($payment->transaction_id ?? 'N/A'),
+            'amount' => -$payment->amount, // Negative amount for refund
+            'status' => 'completed',
+            'payment_date' => now(),
+            'notes' => 'Refund for payment ' . $payment->payment_number,
+            'received_by' => auth()->id(),
         ]);
 
         return response()->json([
             'message' => 'Payment refunded successfully.',
-            'data' => new PaymentResource($payment->load(['folio', 'reservation', 'receivedBy'])),
+            'data' => new PaymentResource($refundPayment->load(['folio', 'reservation', 'receivedBy'])),
         ]);
     }
 }

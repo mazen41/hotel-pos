@@ -40,12 +40,12 @@ Route::prefix('auth')->group(function () {
     Route::post('/login',    [AuthController::class, 'login']);
 });
 
-// ─── POS Integration Routes (Public for internal integration) ─────────────────
-Route::prefix('guests')->group(function () {
+// ─── POS Integration Routes (Protected with API key) ─────────────────
+Route::middleware('api.key')->prefix('guests')->group(function () {
     Route::get('/search', [GuestController::class, 'search']);
 });
 
-Route::prefix('billing')->group(function () {
+Route::middleware('api.key')->prefix('billing')->group(function () {
     Route::post('/charges/post', [ChargeController::class, 'store']);
     Route::get('/folios/lookup', [FolioController::class, 'lookupOpenForReservation']);
     Route::post('/folios/open', [FolioController::class, 'store']);

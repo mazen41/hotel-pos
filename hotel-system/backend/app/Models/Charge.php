@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Charge extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'folio_id',
@@ -59,6 +60,11 @@ class Charge extends Model
             }
             if (!$charge->total_amount) {
                 $charge->total_amount = $charge->amount + $charge->tax_amount;
+            }
+            
+            // Ensure reservation_id is required for room charges
+            if ($charge->charge_type === 'room' && !$charge->reservation_id) {
+                throw new \Illuminate\Database\QueryException('Reservation ID is required for room charges.');
             }
         });
 
