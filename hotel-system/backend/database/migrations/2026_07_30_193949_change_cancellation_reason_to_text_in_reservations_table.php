@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -11,9 +12,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('reservations', function (Blueprint $table) {
-            $table->text('cancellation_reason')->change();
-        });
+        // First, make the column nullable with larger size to handle existing data
+        DB::statement('ALTER TABLE reservations MODIFY cancellation_reason VARCHAR(1000) NULL');
+        
+        // Then change to text type
+        DB::statement('ALTER TABLE reservations MODIFY cancellation_reason TEXT NULL');
     }
 
     /**
@@ -21,8 +24,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('reservations', function (Blueprint $table) {
-            $table->string('cancellation_reason', 255)->nullable()->change();
-        });
+        // Revert back to varchar with proper size
+        DB::statement('ALTER TABLE reservations MODIFY cancellation_reason VARCHAR(255) NULL');
     }
 };
